@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { APP_ROUTES } from "../utils/Path";
+import { getStoredUser } from "../services/authService";
 
 import { NavItem } from "ui-shared/components/ui/NavItem";
 import { PerfilNav } from "ui-shared/components/ui/PerfilNav";
@@ -25,11 +26,17 @@ const mainLinks = [
 ];
 
 export function NavBarLeft() {
+    const user = getStoredUser();
+
     return (
         <aside className="w-64 h-full bg-(--Widget-background) flex flex-col py-6 gap-6">
 
             {/* SEÇÃO 1: Perfil do Usuário */}
-            <PerfilNav />
+            <PerfilNav
+                name={user?.name}
+                job={user?.job}
+                avatarUrl={user?.avatarUrl}
+            />
 
             {/* SEÇÃO 2: Navegação Principal */}
             <nav className="flex-1">

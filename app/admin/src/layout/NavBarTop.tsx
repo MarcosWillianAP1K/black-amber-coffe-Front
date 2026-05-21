@@ -1,9 +1,31 @@
-import {
-    Bell,
-    Settings
-}
-    from "lucide-react";
+import { OptionConfig, type OptionConfigProps } from "ui-shared/components/OptionConfig";
+import { NotificationBell } from "ui-shared/components/NotificationBell";
 
+
+
+const options: OptionConfigProps[] = [
+    {
+        label: "Profile", action: () => {
+            console.log("Profile clicked");
+        }
+    },
+    {
+        label: "Settings", action: () => {
+            console.log("Settings clicked");
+        }
+    },
+    {
+        label: "Logout", action: () => {
+            console.log("Logout clicked");
+        }
+    }];
+
+
+const notifications = [
+    { id: 1, message: "New order received", time: "2 mins ago", action: () => console.log("Notification 1 clicked") },
+    { id: 2, message: "Inventory low for Espresso Beans", time: "10 mins ago", action: () => console.log("Notification 2 clicked") },
+    { id: 3, message: "New staff member added", time: "1 hour ago", action: () => console.log("Notification 3 clicked") },
+];
 
 
 export function NavBarTop() {
@@ -19,10 +41,9 @@ export function NavBarTop() {
             <div className="flex items-center gap-6">
 
 
-                <Bell size={20} className="cursor-pointer text-(--Primary-off) hover:text-(--Primary-selected)" />
+                <NotificationBell notifications={notifications} />
 
-                <Settings size={20} className="cursor-pointer text-(--Primary-off) hover:text-(--Primary-selected)" />
-
+                <OptionConfig options={options} />
 
                 <div className="w-8 h-8 bg-(--White) rounded-full cursor-pointer">
                     <img
