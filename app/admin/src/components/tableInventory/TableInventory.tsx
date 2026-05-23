@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 import { STOCK_STATUSES } from "shared-utils/types/inventory";
 import type { InventoryItem, InventoryAddStockData, InventoryEditData } from "shared-utils/types/inventory";
 import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
+import { SearchBar } from "ui-shared/components/ui/SearchBar";
 import { TableInventoryHeader } from "./TableInventoryHeader";
 import { TableInventoryRow } from "./TableInventoryRow";
 import { InventoryItemFormPanel } from "./InventoryItemFormPanel";
@@ -37,6 +38,7 @@ type PanelState =
 
 export function TableInventory({items,handlers,title = "INVENTORY",isLive = true,}: TableInventoryProps) {
     const [panelState, setPanelState] = useState<PanelState>({ mode: "closed" });
+    const [searchTerm, setSearchTerm] = useState("");
     const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "amount-asc" | "amount-desc" | "status-critical">("default");
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -87,6 +89,11 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
 
     const displayItems = useMemo(() => {
         let next = [...items];
+        const query = searchTerm.trim().toLowerCase();
+
+        if (query) {
+            next = next.filter((item) => item.name.toLowerCase().includes(query));
+        }
 
         if (statusFilter) {
             next = next.filter((item) => item.status === statusFilter);
@@ -121,7 +128,7 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
         }
 
         return next;
-    }, [items, sortType, statusFilter]);
+    }, [items, searchTerm, sortType, statusFilter]);
 
     const filterOptions: FilterOption[] = [
         {
@@ -170,16 +177,19 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
         <div className="flex w-full h-fit gap-10">
             {/* Table Section */}
             <div className={`w-full h-170 p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300`}>
-                <div className="flex flex-row items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <TableInventoryHeader title={title} isLive={isLive} />
                     </div>
-                    <FilterButton
-                        title="Inventory filters"
-                        buttonLabel="Filter"
-                        options={filterOptions}
-                        align="right"
-                    />
+                    <div className="flex items-center gap-3">
+                        <SearchBar placeholder="Search by name" onChange={setSearchTerm} />
+                        <FilterButton
+                            title="Inventory filters"
+                            buttonLabel="Filter"
+                            options={filterOptions}
+                            align="right"
+                        />
+                    </div>
                 </div>
 
                 {/* Table */}

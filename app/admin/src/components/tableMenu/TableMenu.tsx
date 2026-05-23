@@ -12,6 +12,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import type { MenuItem, MenuItemFormData } from "shared-utils/types/menu";
 import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
+import { SearchBar } from "ui-shared/components/ui/SearchBar";
 import { TableMenuHeader } from "./TableMenuHeader";
 import { TableMenuRow } from "./TableMenuRow";
 import { MenuItemFormPanel } from "./MenuItemFormPanel";
@@ -43,6 +44,7 @@ type PanelState =
 
 export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = true, categories, }: TableMenuProps) {
     const [panelState, setPanelState] = useState<PanelState>({ mode: "closed" });
+    const [searchTerm, setSearchTerm] = useState("");
     const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "price-asc" | "price-desc">("default");
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
@@ -98,6 +100,11 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
 
     const displayItems = useMemo(() => {
         let next = [...items];
+        const query = searchTerm.trim().toLowerCase();
+
+        if (query) {
+            next = next.filter((item) => item.name.toLowerCase().includes(query));
+        }
 
         if (categoryFilter) {
             next = next.filter((item) => item.category === categoryFilter);
@@ -123,7 +130,7 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
         }
 
         return next;
-    }, [items, categoryFilter, sortType]);
+    }, [items, searchTerm, categoryFilter, sortType]);
 
     const filterOptions: FilterOption[] = [
         {
@@ -167,13 +174,19 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
         <div className="flex w-full h-fit gap-10">
             {/* Table Section */}
             <div className={`w-full h-170 p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300 ${isPanelOpen ? "mr-0" : ""}`}>
-                <div className="flex flex-row items-center justify-end gap-4">
-                    <TableMenuHeader title={title} isLive={isLive} />
-                    <FilterButton
-                        title="Menu filters"
-                        buttonLabel="Filter"
-                        options={filterOptions}
-                    />
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <TableMenuHeader title={title} isLive={isLive} />
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <SearchBar placeholder="Search by name" onChange={setSearchTerm} />
+                        <FilterButton
+                            title="Menu filters"
+                            buttonLabel="Filter"
+                            options={filterOptions}
+                            align="right"
+                        />
+                    </div>
                 </div>
 
                 {/* Table */}
