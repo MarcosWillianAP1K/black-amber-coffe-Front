@@ -8,9 +8,10 @@
  * component ready for API/database integration.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import type { MenuItem, MenuItemFormData } from "shared-utils/types/menu";
+import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
 import { TableMenuHeader } from "./TableMenuHeader";
 import { TableMenuRow } from "./TableMenuRow";
 import { MenuItemFormPanel } from "./MenuItemFormPanel";
@@ -42,6 +43,8 @@ type PanelState =
 
 export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = true, categories, }: TableMenuProps) {
     const [panelState, setPanelState] = useState<PanelState>({ mode: "closed" });
+    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "price-asc" | "price-desc">("default");
+    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
     const handleEditClick = useCallback((item: MenuItem) => {
         setPanelState({ mode: "edit", item });
@@ -83,11 +86,95 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
     const isPanelOpen = panelState.mode !== "closed";
     const editingItem = panelState.mode === "edit" ? panelState.item : null;
 
+    const availableCategories = useMemo(() => {
+        const base = categories && categories.length > 0
+            ? categories
+            : items.map((item) => item.category);
+
+        return Array.from(new Set(base.filter(Boolean))).sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: "base" })
+        );
+    }, [categories, items]);
+
+    const displayItems = useMemo(() => {
+        let next = [...items];
+
+        if (categoryFilter) {
+            next = next.filter((item) => item.category === categoryFilter);
+        }
+
+        const nameCompare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
+
+        switch (sortType) {
+            case "name-asc":
+                next.sort((a, b) => nameCompare(a.name, b.name));
+                break;
+            case "name-desc":
+                next.sort((a, b) => nameCompare(b.name, a.name));
+                break;
+            case "price-asc":
+                next.sort((a, b) => a.price - b.price || nameCompare(a.name, b.name));
+                break;
+            case "price-desc":
+                next.sort((a, b) => b.price - a.price || nameCompare(a.name, b.name));
+                break;
+            default:
+                break;
+        }
+
+        return next;
+    }, [items, categoryFilter, sortType]);
+
+    const filterOptions: FilterOption[] = [
+        {
+            label: "Default order",
+            action: () => setSortType("default"),
+            active: sortType === "default",
+        },
+        {
+            label: "Name (A-Z)",
+            action: () => setSortType("name-asc"),
+            active: sortType === "name-asc",
+        },
+        {
+            label: "Name (Z-A)",
+            action: () => setSortType("name-desc"),
+            active: sortType === "name-desc",
+        },
+        {
+            label: "Price (Low to High)",
+            action: () => setSortType("price-asc"),
+            active: sortType === "price-asc",
+        },
+        {
+            label: "Price (High to Low)",
+            action: () => setSortType("price-desc"),
+            active: sortType === "price-desc",
+        },
+        {
+            label: "All categories",
+            action: () => setCategoryFilter(null),
+            active: categoryFilter === null,
+        },
+        ...availableCategories.map((category) => ({
+            label: `Category: ${category}`,
+            action: () => setCategoryFilter(category),
+            active: categoryFilter === category,
+        })),
+    ];
+
     return (
         <div className="flex w-full h-fit gap-10">
             {/* Table Section */}
-            <div className={`w-full h-[680px] p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300 ${isPanelOpen ? "mr-0" : ""}`}>
-                <TableMenuHeader title={title} isLive={isLive} />
+            <div className={`w-full h-170 p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300 ${isPanelOpen ? "mr-0" : ""}`}>
+                <div className="flex flex-row items-center justify-end gap-4">
+                    <TableMenuHeader title={title} isLive={isLive} />
+                    <FilterButton
+                        title="Menu filters"
+                        buttonLabel="Filter"
+                        options={filterOptions}
+                    />
+                </div>
 
                 {/* Table */}
                 <div className="flex-1 overflow-auto">
@@ -109,7 +196,7 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
                             </tr>
                         </thead>
                         <tbody>
-                            {items.map((item) => (
+                            {displayItems.map((item) => (
                                 <TableMenuRow
                                     key={item.id}
                                     item={item}
@@ -125,13 +212,13 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
                     </table>
 
                     {/* Empty State */}
-                    {items.length === 0 && (
+                    {displayItems.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3">
                             <p className="text-(--Text-primary-off) text-sm font-secondary">
-                                No menu items yet
+                                No menu items found
                             </p>
                             <p className="text-(--Text-primary-off)/50 text-xs font-secondary">
-                                Click "Add Product" to get started
+                                Adjust filters or add a new product
                             </p>
                         </div>
                     )}

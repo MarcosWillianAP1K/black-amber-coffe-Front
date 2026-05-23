@@ -7,9 +7,11 @@
  * All data operations are delegated via callbacks (API-ready).
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
+import { STOCK_STATUSES } from "shared-utils/types/inventory";
 import type { InventoryItem, InventoryAddStockData, InventoryEditData } from "shared-utils/types/inventory";
+import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
 import { TableInventoryHeader } from "./TableInventoryHeader";
 import { TableInventoryRow } from "./TableInventoryRow";
 import { InventoryItemFormPanel } from "./InventoryItemFormPanel";
@@ -35,6 +37,8 @@ type PanelState =
 
 export function TableInventory({items,handlers,title = "INVENTORY",isLive = true,}: TableInventoryProps) {
     const [panelState, setPanelState] = useState<PanelState>({ mode: "closed" });
+    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "amount-asc" | "amount-desc" | "status-critical">("default");
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
     const handleEditClick = useCallback((item: InventoryItem) => {
         setPanelState({ mode: "edit", item });
@@ -81,11 +85,102 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
     const isPanelOpen = panelState.mode !== "closed";
     const editingItem = panelState.mode === "edit" ? panelState.item : null;
 
+    const displayItems = useMemo(() => {
+        let next = [...items];
+
+        if (statusFilter) {
+            next = next.filter((item) => item.status === statusFilter);
+        }
+
+        const nameCompare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
+
+        switch (sortType) {
+            case "name-asc":
+                next.sort((a, b) => nameCompare(a.name, b.name));
+                break;
+            case "name-desc":
+                next.sort((a, b) => nameCompare(b.name, a.name));
+                break;
+            case "amount-asc":
+                next.sort((a, b) => a.amount - b.amount || nameCompare(a.name, b.name));
+                break;
+            case "amount-desc":
+                next.sort((a, b) => b.amount - a.amount || nameCompare(a.name, b.name));
+                break;
+            case "status-critical": {
+                const priority: Record<string, number> = {
+                    "Out of Stock": 0,
+                    "Low Stock": 1,
+                    "In Stock": 2,
+                };
+                next.sort((a, b) => (priority[a.status] ?? 99) - (priority[b.status] ?? 99));
+                break;
+            }
+            default:
+                break;
+        }
+
+        return next;
+    }, [items, sortType, statusFilter]);
+
+    const filterOptions: FilterOption[] = [
+        {
+            label: "Default order",
+            action: () => setSortType("default"),
+            active: sortType === "default",
+        },
+        {
+            label: "Name (A-Z)",
+            action: () => setSortType("name-asc"),
+            active: sortType === "name-asc",
+        },
+        {
+            label: "Name (Z-A)",
+            action: () => setSortType("name-desc"),
+            active: sortType === "name-desc",
+        },
+        {
+            label: "Amount (Low to High)",
+            action: () => setSortType("amount-asc"),
+            active: sortType === "amount-asc",
+        },
+        {
+            label: "Amount (High to Low)",
+            action: () => setSortType("amount-desc"),
+            active: sortType === "amount-desc",
+        },
+        {
+            label: "Status (Critical first)",
+            action: () => setSortType("status-critical"),
+            active: sortType === "status-critical",
+        },
+        {
+            label: "All statuses",
+            action: () => setStatusFilter(null),
+            active: statusFilter === null,
+        },
+        ...STOCK_STATUSES.map((status) => ({
+            label: `Status: ${status}`,
+            action: () => setStatusFilter(status),
+            active: statusFilter === status,
+        })),
+    ];
+
     return (
         <div className="flex w-full h-fit gap-10">
             {/* Table Section */}
-            <div className={`w-full h-[680px] p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300`}>
-                <TableInventoryHeader title={title} isLive={isLive} />
+            <div className={`w-full h-170 p-4 rounded-md flex flex-col min-w-0 bg-(--Widget-background) transition-all duration-300`}>
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <TableInventoryHeader title={title} isLive={isLive} />
+                    </div>
+                    <FilterButton
+                        title="Inventory filters"
+                        buttonLabel="Filter"
+                        options={filterOptions}
+                        align="right"
+                    />
+                </div>
 
                 {/* Table */}
                 <div className="flex-1 overflow-auto">
@@ -107,7 +202,7 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
                             </tr>
                         </thead>
                         <tbody>
-                            {items.map((item) => (
+                            {displayItems.map((item) => (
                                 <TableInventoryRow
                                     key={item.id}
                                     item={item}
@@ -123,13 +218,13 @@ export function TableInventory({items,handlers,title = "INVENTORY",isLive = true
                     </table>
 
                     {/* Empty State */}
-                    {items.length === 0 && (
+                    {displayItems.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3">
                             <p className="text-(--Text-primary-off) text-sm font-secondary">
-                                No inventory items yet
+                                No inventory items found
                             </p>
                             <p className="text-(--Text-primary-off)/50 text-xs font-secondary">
-                                Click "Add Stock" to get started
+                                Adjust filters or add new stock
                             </p>
                         </div>
                     )}
