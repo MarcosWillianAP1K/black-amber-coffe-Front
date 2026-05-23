@@ -14,6 +14,7 @@ import { MOCK_ORDERS } from "shared-utils/MockBD.js";
 
 // In-memory store (simulates server state)
 let orders = [...MOCK_ORDERS];
+let completedOrders: Order[] = [];
 
 // ──────────────────────────────────────────────
 // Service functions
@@ -40,4 +41,21 @@ export async function updateOrderStatus(id: string, newStatus: OrderStatus): Pro
 export async function deleteOrder(id: string): Promise<void> {
     // TODO: await fetch(`/api/orders/${id}`, { method: "DELETE" });
     orders = orders.filter((o) => o.id !== id);
+}
+
+/** Create a new order */
+export async function createOrder(order: Order): Promise<Order> {
+    // TODO: return await fetch(`/api/orders`, { method: "POST", body: JSON.stringify(order) }).then(res => res.json());
+    orders = [order, ...orders];
+    return order;
+}
+
+/** Move an order to completed list */
+export async function completeOrder(id: string): Promise<Order> {
+    const order = orders.find((o) => o.id === id);
+    if (!order) throw new Error(`Order ${id} not found`);
+
+    orders = orders.filter((o) => o.id !== id);
+    completedOrders = [order, ...completedOrders];
+    return order;
 }
