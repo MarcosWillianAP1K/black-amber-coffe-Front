@@ -1,3 +1,4 @@
+import { useEffect, type JSX } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 // Importando paths
@@ -15,6 +16,8 @@ import { Analytics } from "./pages/content/Analytics";
 import { Staff } from "./pages/content/Staff";
 import { Login } from "./pages/Login";
 import { SignUp } from "./pages/SignUp";
+import { Perfil } from "./pages/Perfil";
+import { logoutService, getStoredToken } from "./services/authService";
 
 // Componente genérico para as telas não finalizadas
 // eslint-disable-next-line react-refresh/only-export-components
@@ -26,15 +29,34 @@ const EmConstrucao = () => (
     </div>
 );
 
+// eslint-disable-next-line react-refresh/only-export-components
+const RequireAuth = ({ children }: { children: JSX.Element }) => {
+    const token = getStoredToken();
+    return token ? children : <Navigate to={APP_ROUTES.LOGIN} replace />;
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+const LogoutRoute = () => {
+    useEffect(() => {
+        logoutService();
+    }, []);
+
+    return <Navigate to={APP_ROUTES.LOGIN} replace />;
+};
+
 // Mapa central de rotas do sistema
 export const router = createBrowserRouter([
     {
         path: "/",
-        element: <Template />,
+        element: (
+            <RequireAuth>
+                <Template />
+            </RequireAuth>
+        ),
         children: [
             {
                 index: true,
-                element: <Navigate to={APP_ROUTES.DASHBOARD} replace />
+                element: <Navigate to={APP_ROUTES.LOGIN} replace />
             },
             {
                 path: APP_ROUTES.DASHBOARD,
@@ -64,11 +86,15 @@ export const router = createBrowserRouter([
     },
     {
         path: APP_ROUTES.SUPPORT,
-        element: <EmConstrucao />
+        element: (
+            <RequireAuth>
+                <EmConstrucao />
+            </RequireAuth>
+        )
     },
     {
         path: APP_ROUTES.LOGOUT,
-        element: <Login />
+        element: <LogoutRoute />
     },
     {
         path: APP_ROUTES.LOGIN,
@@ -77,5 +103,21 @@ export const router = createBrowserRouter([
     {
         path: APP_ROUTES.SIGNUP,
         element: <SignUp />
+    },
+    {
+        path: APP_ROUTES.PERFIL,
+        element: (
+            <RequireAuth>
+                <Perfil />
+            </RequireAuth>
+        )
+    },
+    {
+        path: APP_ROUTES.PERFIL_DETAIL,
+        element: (
+            <RequireAuth>
+                <Perfil />
+            </RequireAuth>
+        )
     }
 ]);

@@ -1,24 +1,10 @@
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { OptionConfig, type OptionConfigProps } from "ui-shared/components/OptionConfig";
 import { NotificationBell } from "ui-shared/components/NotificationBell";
+import { APP_ROUTES } from "../utils/Path";
+import { useAuth } from "../hooks/useAuth";
 
-
-
-const options: OptionConfigProps[] = [
-    {
-        label: "Profile", action: () => {
-            console.log("Profile clicked");
-        }
-    },
-    {
-        label: "Settings", action: () => {
-            console.log("Settings clicked");
-        }
-    },
-    {
-        label: "Logout", action: () => {
-            console.log("Logout clicked");
-        }
-    }];
 
 
 const notifications = [
@@ -29,6 +15,30 @@ const notifications = [
 
 
 export function NavBarTop() {
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const profilePath = user
+        ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.id)
+        : APP_ROUTES.PERFIL;
+
+    const options: OptionConfigProps[] = useMemo(() => [
+        {
+            label: "Profile",
+            action: () => navigate(profilePath),
+        },
+        {
+            label: "Settings",
+            action: () => {
+                console.log("Settings clicked");
+            }
+        },
+        {
+            label: "Logout",
+            action: () => logout(),
+        }
+    ], [navigate, profilePath, logout]);
+
     return (
 
         <div className="w-full h-fit py-4 bg-(--Nav-bar-background) shadow-lg text-white flex items-center justify-between px-6">
@@ -45,13 +55,18 @@ export function NavBarTop() {
 
                 <OptionConfig options={options} />
 
-                <div className="w-8 h-8 bg-(--White) rounded-full cursor-pointer">
+                <button
+                    type="button"
+                    onClick={() => navigate(profilePath)}
+                    className="w-8 h-8 bg-(--White) rounded-full cursor-pointer overflow-hidden"
+                    aria-label="Open profile"
+                >
                     <img
                         src="https://github.com/MarcosWillian.png" // Puxando sua foto do Github de exemplo
                         alt="User"
                         className="rounded-full overflow-hidden w-full h-full object-cover"
                     />
-                </div>
+                </button>
             </div>
 
         </div>

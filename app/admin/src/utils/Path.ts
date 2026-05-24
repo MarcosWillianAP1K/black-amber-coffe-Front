@@ -10,5 +10,7 @@ export const APP_ROUTES = {
     SUPPORT: "/support",
     LOGOUT: "/logout",
     LOGIN: "/login",
-    SIGNUP: "/signup"
+    SIGNUP: "/signup",
+    PERFIL: "/perfil",
+    PERFIL_DETAIL: "/perfil/:kind/:id"
 };

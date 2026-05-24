@@ -1,4 +1,4 @@
-import { ButtonPrimary } from "./ButtonPrimary";
+// import { ButtonPrimary } from "./ButtonPrimary";
 
 interface PerfilNavProps {
     name?: string;
@@ -12,7 +12,7 @@ export function PerfilNav({ name, job, avatarUrl }: PerfilNavProps) {
     const displayAvatar = avatarUrl || "https://github.com/MarcosWillian.png";
 
     return (
-        <div className="px-6 items-start justify-center flex flex-col">
+        <div className="w-fit h-fit px-6 items-start justify-center flex flex-col">
             <div className="flex items-center gap-3 mb-6">
                 <img
                     src={displayAvatar}
@@ -27,9 +27,9 @@ export function PerfilNav({ name, job, avatarUrl }: PerfilNavProps) {
             </div>
 
 
-            <ButtonPrimary onClick={() => console.log("Criar nova entrada")}>
+            {/* <ButtonPrimary onClick={() => console.log("Criar nova entrada")}>
                 <span>+</span> New Entry
-            </ButtonPrimary>
+            </ButtonPrimary> */}
         </div>
     );
 
