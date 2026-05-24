@@ -17,11 +17,12 @@ import { Staff } from "./pages/content/Staff";
 import { Login } from "./pages/Login";
 import { SignUp } from "./pages/SignUp";
 import { Perfil } from "./pages/Perfil";
-import { Config } from "./pages/Config";
+import { Settings } from "./pages/Settings";
+import { Support } from "./pages/Support";
 import { logoutService, getStoredToken } from "./services/authService";
 
 // Componente genérico para as telas não finalizadas
-// eslint-disable-next-line react-refresh/only-export-components
+// eslint-disable-next-line react-refresh/only-export-components, @typescript-eslint/no-unused-vars
 const EmConstrucao = () => (
     <div className="w-full h-full bg-(--Page-background) flex items-center justify-center">
         <h2 className="text-(--Text-primary-off) text-xl font-medium">
@@ -89,7 +90,7 @@ export const router = createBrowserRouter([
         path: APP_ROUTES.SUPPORT,
         element: (
             <RequireAuth>
-                <EmConstrucao />
+                <Support />
             </RequireAuth>
         )
     },
@@ -109,7 +110,7 @@ export const router = createBrowserRouter([
         path: APP_ROUTES.SETTINGS,
         element: (
             <RequireAuth>
-                <Config />
+                <Settings />
             </RequireAuth>
         )
     },

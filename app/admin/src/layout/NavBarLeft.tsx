@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
     Menu,
@@ -14,6 +16,7 @@ import { getStoredUser } from "../services/authService";
 
 import { NavItem } from "ui-shared/components/ui/NavItem";
 import { PerfilNav } from "ui-shared/components/ui/PerfilNav";
+import { ConfirmDialog } from "ui-shared/components/ConfirmDialog";
 
 
 const mainLinks = [
@@ -27,9 +30,14 @@ const mainLinks = [
 
 export function NavBarLeft() {
     const user = getStoredUser();
+    const navigate = useNavigate();
+    const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+
+    const navButtonClass = "w-full flex items-center gap-4 px-6 py-3 text-sm font-primary font-medium transition-colors border-r-4 text-(--Text-primary-off) border-transparent hover:bg-(--Button-background) hover:text-(--Text-gray)";
 
     return (
-        <aside className="w-64 h-full bg-(--Widget-background) flex flex-col py-6 gap-6">
+        <>
+            <aside className="w-64 h-full bg-(--Widget-background) flex flex-col py-6 gap-6">
 
             {/* SEÇÃO 1: Perfil do Usuário */}
             <PerfilNav
@@ -57,13 +65,31 @@ export function NavBarLeft() {
                     label="Support"
                     to={APP_ROUTES.SUPPORT}
                 />
-                <NavItem
-                    icon={LogOut}
-                    label="Logout"
-                    to={APP_ROUTES.LOGOUT}
-                />
+                <button
+                    type="button"
+                    onClick={() => setIsLogoutOpen(true)}
+                    className={navButtonClass}
+                >
+                    <LogOut size={20} />
+                    <span>Logout</span>
+                </button>
             </div>
 
-        </aside>
+            </aside>
+
+            <ConfirmDialog
+                isOpen={isLogoutOpen}
+                title="Sign out"
+                description="Are you sure you want to log out?"
+                confirmLabel="Logout"
+                cancelLabel="Cancel"
+                danger
+                onCancel={() => setIsLogoutOpen(false)}
+                onConfirm={() => {
+                    setIsLogoutOpen(false);
+                    navigate(APP_ROUTES.LOGOUT);
+                }}
+            />
+        </>
     );
 }

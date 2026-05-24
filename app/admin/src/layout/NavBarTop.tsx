@@ -16,7 +16,7 @@ const notifications = [
 
 export function NavBarTop() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const profilePath = user
         ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.id)
@@ -30,12 +30,8 @@ export function NavBarTop() {
         {
             label: "Settings",
             action: () => navigate(APP_ROUTES.SETTINGS),
-        },
-        {
-            label: "Logout",
-            action: () => logout(),
         }
-    ], [navigate, profilePath, logout]);
+    ], [navigate, profilePath]);
 
     return (
 
