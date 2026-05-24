@@ -7,45 +7,59 @@ Este repositório contém o código fonte do ecossistema do **Black Amber Coffee
 A arquitetura foi pensada para ser **Modular, Escalável e Pronta para API (API-Ready)**. O código está dividido em duas grandes áreas na raiz do projeto: `app/` (onde ficam as aplicações reais) e `packages/` (onde ficam os módulos compartilhados).
 
 ### `packages/` (Módulos Compartilhados)
-Aqui ficam as peças que podem ser usadas por qualquer aplicação dentro do monorepo.
+
+Aqui ficam as peças base que podem ser usadas por qualquer aplicação dentro do monorepo.
 
 * **`packages/ui-shared/`**:
   * **O que é**: O "Design System" do projeto. Contém apenas os componentes visuais genéricos (botões, badges, barras de navegação e títulos).
-  * **Por que está aqui**: Para que tanto o `admin` quanto o `client` tenham a mesma identidade visual sem precisar duplicar o código dos botões ou estilos CSS base.
+  * **Por que está aqui**: Para que tanto o `admin` quanto o `client` tenham a mesma identidade visual sem precisar duplicar o código dos botões ou estilos CSS base. Note que no `vite.config.ts`, a aplicação principal cria um *alias* (`'ui-shared'`) apontando direto para cá.
 
 * **`packages/utils/`**:
-  * **O que é**: Tipagens do TypeScript (interfaces de domínio como `MenuItem` e `Order`) e funções auxiliares de lógica, como formatadores de moeda.
-  * **Por que está aqui**: O "Menu" e o "Pedido" são os mesmos conceitos tanto para o cliente que compra quanto para o admin que gerencia. Compartilhando os `types`, garantimos que toda a aplicação converse na mesma língua quando a API for conectada.
+  * **O que é**: Tipagens globais de domínio (interfaces como `Worker`, `User`, `Order`, `Product`, `InventoryItem`), o Banco de Dados em memória (MockBD.ts) e helpers.
+  * **Por que está aqui**: O "Menu" e o "Pedido" são conceitos globais. Compartilhando os `types`, garantimos que todas as aplicações falem a mesma língua. **Nota:** As tipagens aqui refletem um espelho exato (1:1) do que a nossa API / Backend final espera receber (incluindo campos como `publicId`, `profile.fullName`, `totalAmount` e status em uppercase `PENDING/LATE`).
 
 ### `app/` (Aplicações)
-Aqui ficam os sistemas que rodam de forma independente.
+
+Aqui ficam os sistemas front-end que rodam de forma independente e consomem os pacotes.
 
 #### `app/admin/` (Painel Administrativo)
-A aplicação para gerentes e baristas do Black Amber. Toda a lógica de negócio administrativa fica fechada aqui.
 
-* **`src/components/`**: Diferente do `ui-shared`, os componentes que ficam aqui possuem **lógica de negócio** atrelada a eles. Ex: `TableMenu` sabe como renderizar uma lista de produtos específicos do admin, `CardOrder` sabe renderizar detalhes de um pedido.
-* **`src/services/`**: A camada de comunicação com o Banco de Dados/Back-end. É aqui que moram os "Mocks" atuais e onde as chamadas `fetch` para a API serão colocadas futuramente. Isolamos isso para não misturar lógica de API com UI.
-* **`src/hooks/`**: Onde criamos os *Custom Hooks* (ex: `useMenuItems`). Eles "sugam" os dados da camada de serviço (`services/`) e entregam o estado pronto e reativo para as páginas.
-* **`src/pages/`**: As telas finais (ex: `Menu.tsx`, `LiveOrders.tsx`). Graças aos hooks e aos services, as páginas são extremamente limpas e declarativas. A página não precisa saber "como" buscar um dado, ela apenas usa o hook e joga os dados para a UI renderizar.
-* **`src/layout/`**: Onde os esqueletos da página e as barras laterais que montam o esqueleto da aplicação ficam (ex: `Template.tsx`).
-* **`src/utils/`**: Utilitários estritamente restritos ao mundo do Admin (ex: mapa de rotas internas).
+A aplicação (Vite + React) para gerentes, caixas e baristas do Black Amber gerenciarem as operações. Toda a lógica de negócio administrativa fica fechada aqui.
 
-#### `app/client/` (Aplicação do Cliente)
-* Possui a exata mesma estrutura esqueletal do admin (`components`, `hooks`, `services`, `pages`), mas voltada para a interface mobile/web do consumidor final que irá fazer os pedidos.
+* **`src/components/`**: Diferente do `ui-shared`, os componentes que ficam aqui possuem **lógica de negócio** atrelada a eles. Ex: `TableMenu` sabe como renderizar uma tabela complexa com categorias, `CardOrder` sabe puxar os status dos pedidos via API.
+* **`src/services/`**: A camada de comunicação. É aqui que moram os métodos genéricos (ex: `authService.ts`, `orderService.ts`) de chamadas externas. Atualmente essas funções resolvem Promises e manipulam os "Mocks" do `MockBD.ts`, mas a assinatura de cada função já está pronta para a troca simples e indolor para requisições `fetch`/`axios` reais ao Backend final, bastando tirar o mock.
+* **`src/hooks/`**: Onde criamos os *Custom Hooks* de abstração de UI (ex: `useMenuItems`, `useEmployee`). Eles orquestram os dados da camada de serviço (`services/`), controlam os estados de *loading*, *error* e manipulam a lista para que a página foque só no layout.
+* **`src/pages/`**: As telas finais montadas (ex: `Dashboard.tsx`, `LiveOrders.tsx`). Graças aos hooks e aos services, as páginas não sabem *como* buscar os dados, apenas dizem *quais* dados precisam renderizar.
+* **`src/layout/`**: O esqueleto (navbars verticais e horizontais, template base).
+
+#### `app/client/` (Aplicação do Consumidor - Em breve)
+
+* Possuirá a exata mesma estrutura arquitetural do admin (`components`, `hooks`, `services`, `pages`), mas voltada para a interface mobile/web do consumidor final (quem faz os pedidos pelo celular/totem).
+
+---
+
+## 🛠️ Estado Atual do Projeto
+
+* ✅ A estrutura das interfaces no front-end foi 100% alinhada com as entidades do Backend de Produção.
+* ✅ O sistema usa UUIDs mascarados como `publicId`, e extrai dados aninhados (como `profile.email` e `profile.avatarImage`) corretamente para funcionários e usuários.
+* ✅ Os dados de teste e fluxo em tela utilizam o armazenamento local do navegador (`localStorage`) por intermédio dos Services para salvar a persistência durante a navegação.
+* ✅ Há um sistema automático (`main.tsx`) que detecta conflitos ou versões velhas do localStorage e realiza uma migração silenciosa para previnir crashes.
 
 ---
 
 ## 🚀 Como Executar
 
-O projeto utiliza Vite como bundler e npm workspaces para resolver os pacotes internos.
+O projeto utiliza **Vite** no front-end e **npm workspaces** para resolução automática de pacotes (os imports do `ui-shared` caem direto na pasta correta).
 
 ```bash
-# Instalar dependências de todos os apps e packages
+# 1. Instalar todas as dependências de todos os apps e packages da workspace:
 npm install
 
-# Rodar o Painel de Administração
+# 2. Rodar o servidor de desenvolvimento do Painel Administrativo (Vite):
 npm run dev:admin
 
-# Rodar a Aplicação do Cliente
+# 3. Rodar a Aplicação do Cliente (Vite):
 npm run dev:client
 ```
+
+> **Aviso:** Ao acessar o painel (provavelmente em `http://localhost:5173`), caso perceba erros após atualizar branches do Git, o problema normalmente está atrelado ao cache salvo no navegador. O projeto já tem uma proteção que limpa o cache automaticamente caso o schema mude, mas um "Clear Storage" na aba "Application" do inspecionar do Google Chrome é sempre recomendado em grandes refatorações!

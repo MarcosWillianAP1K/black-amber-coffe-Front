@@ -73,7 +73,7 @@ export const Perfil = () => {
         : "Back";
 
     return (
-        <div className="w-full h-fit gap-6 flex flex-col bg-(--Page-background) p-4">
+        <div className="w-full min-h-screen gap-6 flex flex-col bg-(--Page-background) p-4">
             <div className="flex flex-wrap items-center gap-4">
                 <div className="min-w-0 flex-1">
                     <DestakTitle title="Profile" subtitle={profileSubtitle} />
