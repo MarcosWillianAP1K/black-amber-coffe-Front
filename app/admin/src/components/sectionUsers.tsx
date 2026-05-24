@@ -8,15 +8,14 @@ import type { User } from "shared-utils/types/user";
 export interface SectionUsersProps {
     users: User[];
     title: string;
-    onDeleteUser: (id: string) => void;
-    onBlockUser: (id: string) => void;
-    onViewUser: (id: string) => void;
+    onDeleteUser: (publicId: string) => void;
+    onBlockUser: (publicId: string) => void;
+    onViewUser: (publicId: string) => void;
 }
 
 export function SectionUsers({ users, title, onDeleteUser, onBlockUser, onViewUser }: SectionUsersProps) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "orders-desc" | "saved-desc" | "score-desc">("default");
-    const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "newest" | "oldest">("default");
 
     const filteredUsers = useMemo(() => {
         const query = searchTerm.trim().toLowerCase();
@@ -24,43 +23,32 @@ export function SectionUsers({ users, title, onDeleteUser, onBlockUser, onViewUs
 
         if (query) {
             next = next.filter((user) => {
-                const values = [user.name, user.email];
+                const values = [user.profile.fullName, user.email];
                 return values.some((value) => value.toLowerCase().includes(query));
             });
-        }
-
-        if (statusFilter === "active") {
-            next = next.filter((user) => user.active);
-        }
-
-        if (statusFilter === "inactive") {
-            next = next.filter((user) => !user.active);
         }
 
         const nameCompare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
 
         switch (sortType) {
             case "name-asc":
-                next.sort((a, b) => nameCompare(a.name, b.name));
+                next.sort((a, b) => nameCompare(a.profile.fullName, b.profile.fullName));
                 break;
             case "name-desc":
-                next.sort((a, b) => nameCompare(b.name, a.name));
+                next.sort((a, b) => nameCompare(b.profile.fullName, a.profile.fullName));
                 break;
-            case "orders-desc":
-                next.sort((a, b) => b.orders - a.orders || nameCompare(a.name, b.name));
+            case "newest":
+                next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 break;
-            case "saved-desc":
-                next.sort((a, b) => b.saved - a.saved || nameCompare(a.name, b.name));
-                break;
-            case "score-desc":
-                next.sort((a, b) => b.score - a.score || nameCompare(a.name, b.name));
+            case "oldest":
+                next.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                 break;
             default:
                 break;
         }
 
         return next;
-    }, [users, searchTerm, sortType, statusFilter]);
+    }, [users, searchTerm, sortType]);
 
     const filterOptions: FilterOption[] = [
         {
@@ -79,34 +67,14 @@ export function SectionUsers({ users, title, onDeleteUser, onBlockUser, onViewUs
             active: sortType === "name-desc",
         },
         {
-            label: "Most orders",
-            action: () => setSortType("orders-desc"),
-            active: sortType === "orders-desc",
+            label: "Newest first",
+            action: () => setSortType("newest"),
+            active: sortType === "newest",
         },
         {
-            label: "Most saved",
-            action: () => setSortType("saved-desc"),
-            active: sortType === "saved-desc",
-        },
-        {
-            label: "Highest score",
-            action: () => setSortType("score-desc"),
-            active: sortType === "score-desc",
-        },
-        {
-            label: "All statuses",
-            action: () => setStatusFilter("all"),
-            active: statusFilter === "all",
-        },
-        {
-            label: "Active only",
-            action: () => setStatusFilter("active"),
-            active: statusFilter === "active",
-        },
-        {
-            label: "Inactive only",
-            action: () => setStatusFilter("inactive"),
-            active: statusFilter === "inactive",
+            label: "Oldest first",
+            action: () => setSortType("oldest"),
+            active: sortType === "oldest",
         },
     ];
 
@@ -137,7 +105,7 @@ export function SectionUsers({ users, title, onDeleteUser, onBlockUser, onViewUs
             <div className="w-full h-full flex flex-wrap justify-center gap-6 overflow-y-auto">
                 {filteredUsers.map((user) => (
                     <CardUser
-                        key={user.id}
+                        key={user.publicId}
                         {...user}
                         onDeleteUser={onDeleteUser}
                         onBlockUser={onBlockUser}

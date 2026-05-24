@@ -6,18 +6,18 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import type { Employee } from "shared-utils/types/employee";
+import type { Worker } from "shared-utils/types/worker";
 import * as employeeService from "../services/employeeService";
 
 interface UseEmployeeReturn {
-    employees: Employee[];
+    employees: Worker[];
     isLoading: boolean;
-    deleteEmployee: (id: string) => void;
-    toggleEmployeeStatus: (id: string) => void;
+    deleteEmployee: (publicId: string) => void;
+    toggleEmployeeStatus: (publicId: string) => void;
 }
 
 export function useEmployee(): UseEmployeeReturn {
-    const [employees, setEmployees] = useState<Employee[]>(() => {
+    const [employees, setEmployees] = useState<Worker[]>(() => {
         const stored = localStorage.getItem("employees");
         return stored ? JSON.parse(stored) : [];
     });
@@ -40,19 +40,19 @@ export function useEmployee(): UseEmployeeReturn {
         return () => { cancelled = true; };
     }, []);
 
-    const deleteEmployee = useCallback(async (id: string) => {
-        await employeeService.deleteEmployee(id);
+    const deleteEmployee = useCallback(async (publicId: string) => {
+        await employeeService.deleteEmployee(publicId);
         setEmployees((prev) => {
-            const next = prev.filter((e) => e.id !== id);
+            const next = prev.filter((e) => e.publicId !== publicId);
             localStorage.setItem("employees", JSON.stringify(next));
             return next;
         });
     }, []);
 
-    const toggleEmployeeStatus = useCallback(async (id: string) => {
-        const updated = await employeeService.toggleEmployeeStatus(id);
+    const toggleEmployeeStatus = useCallback(async (publicId: string) => {
+        const updated = await employeeService.toggleEmployeeStatus(publicId);
         setEmployees((prev) => {
-            const next = prev.map((e) => (e.id === id ? updated : e));
+            const next = prev.map((e) => (e.publicId === publicId ? updated : e));
             localStorage.setItem("employees", JSON.stringify(next));
             return next;
         });

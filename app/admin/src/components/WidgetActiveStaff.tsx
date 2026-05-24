@@ -1,14 +1,14 @@
 import { CardEmployee } from "./ui/CardEmployee";
-import type { Employee } from "shared-utils/types/employee";
+import type { Worker } from "shared-utils/types/worker";
 
 export interface WidgetActiveStaffProps {
-    employees: Employee[];
-    onDeleteEmployee: (id: string) => void;
-    onBlockEmployee: (id: string) => void;
+    employees: Worker[];
+    onDeleteEmployee: (publicId: string) => void;
+    onBlockEmployee: (publicId: string) => void;
 }
 
 export function WidgetActiveStaff({ employees, onDeleteEmployee, onBlockEmployee }: WidgetActiveStaffProps) {
-    const activeEmployees = employees.filter((employee) => employee.active);
+    const activeEmployees = employees.filter((employee) => employee.isActive);
 
     return (
         <div className="w-full h-95 bg-(--Widget-background) rounded-md border border-(--Border) p-5 flex flex-col gap-4">
@@ -28,12 +28,12 @@ export function WidgetActiveStaff({ employees, onDeleteEmployee, onBlockEmployee
 
             <div className="flex flex-wrap gap-4 items-center flex-1 overflow-y-auto pr-1">
                 {activeEmployees.map((employee) => (
-                    <div key={employee.id} className="w-full sm:w-auto">
+                    <div key={employee.publicId} className="w-full sm:w-auto">
                         <CardEmployee
                             {...employee}
                             onDeleteEmployee={onDeleteEmployee}
                             onBlockEmployee={onBlockEmployee}
-                            onViewEmployee={(id) => console.log("View employee:", id)}
+                            onViewEmployee={(publicId) => console.log("View employee:", publicId)}
                         />
                     </div>
                 ))}

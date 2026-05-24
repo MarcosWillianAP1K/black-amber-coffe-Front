@@ -6,18 +6,18 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import type { MenuItem, MenuItemFormData } from "shared-utils/types/menu";
+import type { Product, ProductInput } from "shared-utils/types/product";
 import type { MenuItemHandlers } from "../components/tableMenu/TableMenu";
 import * as menuService from "../services/menuService";
 
 interface UseMenuItemsReturn {
-    items: MenuItem[];
+    items: Product[];
     isLoading: boolean;
     handlers: MenuItemHandlers;
 }
 
 export function useMenuItems(): UseMenuItemsReturn {
-    const [items, setItems] = useState<MenuItem[]>(() => {
+    const [items, setItems] = useState<Product[]>(() => {
         const stored = localStorage.getItem("menuItems");
         return stored ? JSON.parse(stored) : [];
     });
@@ -40,7 +40,7 @@ export function useMenuItems(): UseMenuItemsReturn {
         return () => { cancelled = true; };
     }, []);
 
-    const handleEdit = useCallback(async (id: string, data: MenuItemFormData) => {
+    const handleEdit = useCallback(async (id: number, data: ProductInput) => {
         const updated = await menuService.updateMenuItem(id, data);
         setItems((prev) => {
             const next = prev.map((item) => (item.id === id ? updated : item));
@@ -49,7 +49,7 @@ export function useMenuItems(): UseMenuItemsReturn {
         });
     }, []);
 
-    const handleDelete = useCallback(async (id: string) => {
+    const handleDelete = useCallback(async (id: number) => {
         await menuService.deleteMenuItem(id);
         setItems((prev) => {
             const next = prev.filter((item) => item.id !== id);
@@ -58,7 +58,7 @@ export function useMenuItems(): UseMenuItemsReturn {
         });
     }, []);
 
-    const handleCreate = useCallback(async (data: MenuItemFormData) => {
+    const handleCreate = useCallback(async (data: ProductInput) => {
         const newItem = await menuService.createMenuItem(data);
         setItems((prev) => {
             const next = [...prev, newItem];

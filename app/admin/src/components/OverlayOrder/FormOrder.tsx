@@ -1,13 +1,12 @@
 
 import { useMemo, useState } from "react";
-import { MOCK_ITEMS_MENU } from "shared-utils/MockBD.js";
+import { MOCK_PRODUCTS } from "shared-utils/MockBD.js";
 
+/** Simplified form data for creating a new order via the overlay form */
 export interface FormOrderData {
-    customer: string;
-    code: string;
-    items: Record<string, number>;
-    observations: string;
-    total: number;
+    observation: string;
+    totalAmount: number;
+    items: Array<{ productId: number; quantity: number; unitPrice: number }>;
 }
 
 interface FormOrderProps {
@@ -16,52 +15,42 @@ interface FormOrderProps {
 }
 
 interface FormOrderState {
-    customer: string;
-    code: string;
-    observations: string;
+    observation: string;
 }
 
 interface OrderItemRow {
     id: string;
-    name: string;
+    productId: number | "";
     qty: number;
 }
 
 const EMPTY_FORM: FormOrderState = {
-    customer: "",
-    code: "",
-    observations: "",
+    observation: "",
 };
 
-const MENU_NAMES = MOCK_ITEMS_MENU.map((item) => item.name);
-const MENU_PRICE_BY_NAME = new Map(
-    MOCK_ITEMS_MENU.map((item) => [item.name, item.price])
+const MENU_BY_ID = new Map(
+    MOCK_PRODUCTS.map((item) => [item.id, item])
 );
 
-function generateOrderCode(): string {
-    const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    return `ORD-${randomDigits}`;
-}
+const MENU_OPTIONS = MOCK_PRODUCTS.map((item) => ({ id: item.id, name: item.name, price: item.price }));
 
 function createItemRow(): OrderItemRow {
     return {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        name: "",
+        productId: "",
         qty: 1,
     };
 }
 
 export function FormOrder({ onClose, onSave }: FormOrderProps) {
-    const [form, setForm] = useState<FormOrderState>(() => ({
-        ...EMPTY_FORM,
-        code: generateOrderCode(),
-    }));
+    const [form, setForm] = useState<FormOrderState>(EMPTY_FORM);
     const [items, setItems] = useState<OrderItemRow[]>([createItemRow()]);
     const [error, setError] = useState("");
 
     const total = useMemo(() => {
         return items.reduce((sum, item) => {
-            const price = MENU_PRICE_BY_NAME.get(item.name) ?? 0;
+            const product = typeof item.productId === "number" ? MENU_BY_ID.get(item.productId) : undefined;
+            const price = product?.price ?? 0;
             const qty = Number.isFinite(item.qty) ? item.qty : 0;
             return sum + price * qty;
         }, 0);
@@ -88,44 +77,33 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
         );
     };
 
-    const buildItemsRecord = (rows: OrderItemRow[]): Record<string, number> => {
-        const record: Record<string, number> = {};
-        rows.forEach((row) => {
-            const name = row.name.trim();
-            const qty = Number(row.qty);
-            if (!name || qty <= 0) return;
-            record[name] = (record[name] ?? 0) + qty;
-        });
-        return record;
-    };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const invalidItems = items.filter(
-            (item) => item.name.trim() && !MENU_PRICE_BY_NAME.has(item.name.trim())
-        );
-        if (invalidItems.length > 0) {
-            setError("Items must be selected from the menu.");
-            return;
-        }
-
-        const cleanedItems = items.filter((item) => item.name.trim() && item.qty > 0);
+        const cleanedItems = items.filter((item) => typeof item.productId === "number" && item.qty > 0);
         if (cleanedItems.length === 0) {
             setError("Add at least one valid item.");
             return;
         }
 
         setError("");
+
+        const orderItems = cleanedItems.map((row) => {
+            const product = MENU_BY_ID.get(row.productId as number);
+            return {
+                productId: row.productId as number,
+                quantity: row.qty,
+                unitPrice: product?.price ?? 0,
+            };
+        });
+
         onSave({
-            ...form,
-            items: buildItemsRecord(cleanedItems),
-            total,
+            observation: form.observation,
+            totalAmount: total,
+            items: orderItems,
         });
-        setForm({
-            ...EMPTY_FORM,
-            code: generateOrderCode(),
-        });
+
+        setForm(EMPTY_FORM);
         setItems([createItemRow()]);
         onClose();
     };
@@ -150,26 +128,6 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
-                <div>
-                    <label className="text-(--Primary) text-[10px] font-secondary font-bold tracking-wider uppercase mb-2 block">
-                        Customer
-                    </label>
-                    <input
-                        type="text"
-                        value={form.customer}
-                        onChange={(e) => setForm((prev) => ({ ...prev, customer: e.target.value }))}
-                        placeholder="Customer name"
-                        required
-                        className="w-full bg-(--Page-background) border border-(--Border) rounded-md px-3 py-2 text-(--Text-gray) text-sm font-secondary placeholder:text-(--Text-primary-off)/40 focus:outline-none focus:border-(--Primary) transition-colors"
-                    />
-                </div>
-
-                <div>
-                    <label className="text-(--Primary) text-[10px] font-secondary font-bold tracking-wider uppercase mb-2 block">
-                        Code
-                    </label>
-                    <h1 className="text-(--Primary-off) text-[16px] font-secondary font-bold tracking-wider uppercase ">{form.code}</h1>
-                </div>
 
                 <div>
                     <label className="text-(--Primary) text-[10px] font-secondary font-bold tracking-wider uppercase mb-2 block">
@@ -203,14 +161,18 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
                                         <path d="M14 11v6" />
                                     </svg>
                                 </button>
-                                <input
-                                    type="text"
-                                    list="menu-items"
-                                    value={item.name}
-                                    onChange={(e) => handleItemChange(index, "name", e.target.value)}
-                                    placeholder="Select an item"
-                                    className="flex-1 bg-(--Page-background) border border-(--Border) rounded-md px-3 py-2 text-(--Text-gray) text-sm font-secondary placeholder:text-(--Text-primary-off)/40 focus:outline-none focus:border-(--Primary) transition-colors"
-                                />
+                                <select
+                                    value={item.productId === "" ? "" : String(item.productId)}
+                                    onChange={(e) => handleItemChange(index, "productId", e.target.value === "" ? "" : Number(e.target.value))}
+                                    className="flex-1 bg-(--Page-background) border border-(--Border) rounded-md px-3 py-2 text-(--Text-gray) text-sm font-secondary focus:outline-none focus:border-(--Primary) transition-colors"
+                                >
+                                    <option value="">Select an item</option>
+                                    {MENU_OPTIONS.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                            {opt.name} — ${opt.price.toFixed(2)}
+                                        </option>
+                                    ))}
+                                </select>
                                 <input
                                     type="number"
                                     min={1}
@@ -221,11 +183,6 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
                             </div>
                         ))}
                     </div>
-                    <datalist id="menu-items">
-                        {MENU_NAMES.map((name) => (
-                            <option key={name} value={name} />
-                        ))}
-                    </datalist>
                     <button
                         type="button"
                         onClick={handleAddItem}
@@ -252,8 +209,8 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
                         Observations
                     </label>
                     <textarea
-                        value={form.observations}
-                        onChange={(e) => setForm((prev) => ({ ...prev, observations: e.target.value }))}
+                        value={form.observation}
+                        onChange={(e) => setForm((prev) => ({ ...prev, observation: e.target.value }))}
                         placeholder="Notes for the order"
                         rows={3}
                         className="w-full bg-(--Page-background) border border-(--Border) rounded-md px-3 py-2 text-(--Text-gray) text-sm font-secondary placeholder:text-(--Text-primary-off)/40 focus:outline-none focus:border-(--Primary) transition-colors resize-none"
@@ -278,7 +235,7 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
             </form>
         </div>
 
-        
+
 
     );
 

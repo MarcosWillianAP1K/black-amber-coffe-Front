@@ -33,11 +33,11 @@ export function Dashboard() {
     const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployee();
 
     const priorityOrders = orders
-        .filter((order) => order.status === "Late" || order.status === "In Progress")
+        .filter((order) => order.status === "LATE" || order.status === "IN PROGRESS")
         .sort((a, b) => {
             if (a.status === b.status) return 0;
-            if (a.status === "Late") return -1;
-            if (b.status === "Late") return 1;
+            if (a.status === "LATE") return -1;
+            if (b.status === "LATE") return 1;
             return 0;
         });
 

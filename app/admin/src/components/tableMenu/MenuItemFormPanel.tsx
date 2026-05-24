@@ -10,53 +10,53 @@
 
 import { useState, useMemo, useRef } from "react";
 import { X, Upload } from "lucide-react";
-import type { MenuItem, MenuItemFormData } from "shared-utils/types/menu";
-import { MENU_CATEGORIES } from "shared-utils/types/menu";
+import type { Product, ProductInput } from "shared-utils/types/product";
+import { PRODUCT_CATEGORIES } from "shared-utils/types/product";
 
 interface MenuItemFormPanelProps {
     /** The item to edit. If null, the panel operates in "create" mode. */
-    editingItem: MenuItem | null;
+    editingItem: Product | null;
     /** Called when the user saves (create or edit). */
-    onSave: (data: MenuItemFormData) => void;
+    onSave: (data: ProductInput) => void;
     /** Called when the user cancels / closes the panel. */
     onCancel: () => void;
     /** Optional list of categories to override the defaults */
     categories?: readonly string[];
 }
 
-const EMPTY_FORM: MenuItemFormData = {
+const EMPTY_FORM: ProductInput = {
     name: "",
     description: "",
-    category: MENU_CATEGORIES[0],
+    category: PRODUCT_CATEGORIES[0],
     price: 0,
     imageUrl: "",
     imageFile: null,
 };
 
-export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = MENU_CATEGORIES, }: MenuItemFormPanelProps) {
+export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = PRODUCT_CATEGORIES, }: MenuItemFormPanelProps) {
     const isEditing = editingItem !== null;
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Derive initial form data from the editing item (no useEffect needed).
     // The parent component uses `key={editingItem?.id ?? "new"}` on this component
     // to force a remount whenever the edited item changes.
-    const initialFormData = useMemo<MenuItemFormData>(() => {
+    const initialFormData = useMemo<ProductInput>(() => {
         if (!editingItem) return EMPTY_FORM;
         return {
             name: editingItem.name,
             description: editingItem.description,
             category: editingItem.category,
             price: editingItem.price,
-            imageUrl: editingItem.imageUrl,
+            imageUrl: editingItem.imageUrl ?? "",
             imageFile: null,
         };
     }, [editingItem]);
 
-    const [formData, setFormData] = useState<MenuItemFormData>(initialFormData);
+    const [formData, setFormData] = useState<ProductInput>(initialFormData);
     const [imagePreview, setImagePreview] = useState<string>(editingItem?.imageUrl ?? "");
 
     const handleChange = (
-        field: keyof MenuItemFormData,
+        field: keyof ProductInput,
         value: string | number
     ) => {
         setFormData((prev) => ({ ...prev, [field]: value }));

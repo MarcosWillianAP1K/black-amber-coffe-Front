@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginService, signUpService, logoutService, getStoredUser, getStoredToken } from "../services/authService";
 import { APP_ROUTES } from "../utils/Path";
-import type { Employee } from "shared-utils/types/employee";
+import type { Worker } from "shared-utils/types/worker";
 
 
 export function useAuth() {
     const navigate = useNavigate();
 
-    const [user, setUser] = useState<Omit<Employee, "password"> | null>(getStoredUser);
+    const [user, setUser] = useState<Worker | null>(getStoredUser);
     const [token, setToken] = useState<string | null>(getStoredToken);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

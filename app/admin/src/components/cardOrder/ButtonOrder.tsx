@@ -15,14 +15,14 @@ export function ButtonOrder({ status, onAction }: ButtonOrderProps) {
     const handleClick = (action: string) => () => onAction?.(action);
 
     switch (status) {
-        case "Created":
+        case "PENDING":
             return (
                 <button className={`${BUTTON_BASE} bg-(--Button-background)`} onClick={handleClick("start")}>
                     <p className="text-(--Text-gray) text-[12px] font-secondary font-bold">START</p>
                 </button>
             );
 
-        case "In Progress":
+        case "IN PROGRESS":
             return (
                 <div className="w-fit h-fit flex gap-2">
                     <button className={`${BUTTON_BASE} bg-(--Button-background)`} onClick={handleClick("hold")}>
@@ -34,21 +34,21 @@ export function ButtonOrder({ status, onAction }: ButtonOrderProps) {
                 </div>
             );
 
-        case "Ready":
+        case "COMPLETED":
             return (
                 <button className={`${BUTTON_BASE} bg-[#04DCFF]`} onClick={handleClick("complete")}>
                     <p className="text-[#003640] text-[12px] font-secondary font-bold">COMPLETE</p>
                 </button>
             );
 
-        case "Late":
+        case "LATE":
             return (
                 <button className={`${BUTTON_BASE} bg-(--Negacion-off)`} onClick={handleClick("complete")}>
                     <p className="text-(--Text-gray) text-[12px] font-secondary font-bold">COMPLETE</p>
                 </button>
             );
 
-        case "Canceled":
+        case "CANCELLED":
             return (
                 <button className={`${BUTTON_BASE} bg-(--Negacion-off)`} onClick={handleClick("delete")}>
                     <p className="text-(--Text-gray) text-[12px] font-secondary font-bold">DELETE</p>

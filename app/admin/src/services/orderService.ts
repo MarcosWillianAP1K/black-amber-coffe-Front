@@ -27,18 +27,19 @@ export async function fetchOrders(): Promise<Order[]> {
 }
 
 /** Update the status of an order */
-export async function updateOrderStatus(id: string, newStatus: OrderStatus): Promise<Order> {
+export async function updateOrderStatus(id: number, newStatus: OrderStatus): Promise<Order> {
     // TODO: return await fetch(`/api/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status: newStatus }) }).then(res => res.json());
     const order = orders.find((o) => o.id === id);
     if (!order) throw new Error(`Order ${id} not found`);
 
-    const updated = { ...order, status: newStatus };
+    const now = new Date().toISOString();
+    const updated = { ...order, status: newStatus, updatedAt: now };
     orders = orders.map((o) => (o.id === id ? updated : o));
     return updated;
 }
 
 /** Delete an order */
-export async function deleteOrder(id: string): Promise<void> {
+export async function deleteOrder(id: number): Promise<void> {
     // TODO: await fetch(`/api/orders/${id}`, { method: "DELETE" });
     orders = orders.filter((o) => o.id !== id);
 }
@@ -51,7 +52,7 @@ export async function createOrder(order: Order): Promise<Order> {
 }
 
 /** Move an order to completed list */
-export async function completeOrder(id: string): Promise<Order> {
+export async function completeOrder(id: number): Promise<Order> {
     const order = orders.find((o) => o.id === id);
     if (!order) throw new Error(`Order ${id} not found`);
 

@@ -8,9 +8,9 @@ import { APP_ROUTES } from "../../utils/Path";
 
 export function Staff() {
     const navigate = useNavigate();
-    const { users, deleteUser, toggleUserStatus } = useUsers();
+    const { users, deleteUser } = useUsers();
     const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployee();
-    const activeEmployees = employees.filter((employee) => employee.active);
+    const activeEmployees = employees.filter((employee) => employee.isActive);
 
     const buildProfilePath = (kind: "user" | "employee", id: string) =>
         APP_ROUTES.PERFIL_DETAIL.replace(":kind", kind).replace(":id", id);
@@ -24,7 +24,7 @@ export function Staff() {
                 title="Working Now"
                 onDeleteEmployee={deleteEmployee}
                 onBlockEmployee={toggleEmployeeStatus}
-                onViewEmployee={(id) => navigate(buildProfilePath("employee", id), { state: { from: "staff" } })}
+                onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
             />
 
             <SectionEmployee
@@ -32,7 +32,7 @@ export function Staff() {
                 title="Staff"
                 onDeleteEmployee={deleteEmployee}
                 onBlockEmployee={toggleEmployeeStatus}
-                onViewEmployee={(id) => navigate(buildProfilePath("employee", id), { state: { from: "staff" } })}
+                onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
             />
 
 
@@ -40,14 +40,9 @@ export function Staff() {
                 users={users}
                 title="Users"
                 onDeleteUser={deleteUser}
-                onBlockUser={toggleUserStatus}
-                onViewUser={(id) => navigate(buildProfilePath("user", id), { state: { from: "staff" } })}
+                onBlockUser={(publicId) => console.log("Block user:", publicId)}
+                onViewUser={(publicId) => navigate(buildProfilePath("user", publicId), { state: { from: "staff" } })}
             />
-
-
-
-
-
         </div>
     );
 }

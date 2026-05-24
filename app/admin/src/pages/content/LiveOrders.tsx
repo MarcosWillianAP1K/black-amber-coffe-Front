@@ -9,7 +9,7 @@ import { useOrders } from "../../hooks/useOrders";
 
 export function LiveOrders() {
     const { orders, handleAction, addOrder } = useOrders();
-    const [sortType, setSortType] = useState<"created" | "alphabetical" | "importance" | "value">("created");
+    const [sortType, setSortType] = useState<"created" | "importance" | "value">("created");
 
     const sortedOrders = useMemo(() => {
         if (sortType === "created") {
@@ -17,32 +17,26 @@ export function LiveOrders() {
         }
 
         const next = [...orders];
-        const nameCompare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
-
-        if (sortType === "alphabetical") {
-            next.sort((a, b) => nameCompare(a.customer, b.customer));
-            return next;
-        }
 
         if (sortType === "importance") {
             const priority: Record<string, number> = {
-                "Late": 0,
-                "In Progress": 1,
-                "Created": 2,
-                "Ready": 3,
-                "Canceled": 4,
+                "LATE": 0,
+                "IN PROGRESS": 1,
+                "PENDING": 2,
+                "COMPLETED": 3,
+                "CANCELLED": 4,
             };
 
             next.sort((a, b) => {
                 const rankA = priority[a.status] ?? 99;
                 const rankB = priority[b.status] ?? 99;
-                return rankA - rankB || nameCompare(a.customer, b.customer);
+                return rankA - rankB;
             });
             return next;
         }
 
         if (sortType === "value") {
-            next.sort((a, b) => b.total - a.total || nameCompare(a.customer, b.customer));
+            next.sort((a, b) => b.totalAmount - a.totalAmount);
             return next;
         }
 
@@ -54,11 +48,6 @@ export function LiveOrders() {
             label: "Ordem criados",
             action: () => setSortType("created"),
             active: sortType === "created",
-        },
-        {
-            label: "Alfabetica (cliente)",
-            action: () => setSortType("alphabetical"),
-            active: sortType === "alphabetical",
         },
         {
             label: "Ordem de importancia",

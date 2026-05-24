@@ -41,9 +41,9 @@ export function NavBarLeft() {
 
             {/* SEÇÃO 1: Perfil do Usuário */}
             <PerfilNav
-                name={user?.name}
-                job={user?.job}
-                avatarUrl={user?.avatarUrl}
+                name={user?.profile?.fullName}
+                job={user?.role}
+                avatarUrl={user?.profile?.avatarImage ?? undefined}
             />
 
             {/* SEÇÃO 2: Navegação Principal */}

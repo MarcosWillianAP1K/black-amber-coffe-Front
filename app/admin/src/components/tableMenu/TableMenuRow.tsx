@@ -4,14 +4,14 @@
  */
 
 import { Pencil, Trash2 } from "lucide-react";
-import type { MenuItem } from "shared-utils/types/menu";
+import type { Product } from "shared-utils/types/product";
 import { formatPrice } from "shared-utils/helpers/currency";
 
 interface TableMenuRowProps {
-    item: MenuItem;
+    item: Product;
     isSelected?: boolean;
-    onEdit: (item: MenuItem) => void;
-    onDelete: (id: string) => void;
+    onEdit: (item: Product) => void;
+    onDelete: (id: number) => void;
 }
 
 export function TableMenuRow({ item, isSelected = false, onEdit, onDelete, }: TableMenuRowProps) {

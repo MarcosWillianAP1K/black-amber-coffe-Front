@@ -1,5 +1,5 @@
-import type { Employee } from "shared-utils/types/employee";
-import { MOCK_EMPLOYEES } from "shared-utils/MockBD.js";
+import type { Worker } from "shared-utils/types/worker";
+import { MOCK_WORKERS } from "shared-utils/MockBD.js";
 
 const URL_API = "http://localhost:3000/api";
 const USE_MOCK = true; // Toggle to false when API is ready
@@ -7,65 +7,69 @@ const USE_MOCK = true; // Toggle to false when API is ready
 
 export interface AuthResponse {
     token: string;
-    user: Omit<Employee, "password">;
+    user: Worker;
 }
 
 
 /**
- * Mock login — searches MOCK_EMPLOYEES by email+password.
+ * Mock login — searches MOCK_WORKERS by email+password.
  * Simulates a real API delay.
  */
 async function mockLogin(email: string, password: string): Promise<AuthResponse> {
     await new Promise((r) => setTimeout(r, 400));
 
-    const employee = MOCK_EMPLOYEES.find(
-        (e) => e.email === email && e.password === password
+    const employee = MOCK_WORKERS.find(
+        (e) => e.profile.email === email
     );
 
     if (!employee) {
         throw new Error("Email or password incorrect");
     }
 
-    if (!employee.active) {
+    if (!employee.isActive) {
         throw new Error("Account is deactivated");
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = employee;
     return {
-        token: `mock-token-${employee.id}-${Date.now()}`,
-        user: userWithoutPassword,
+        token: `mock-token-${employee.publicId}-${Date.now()}`,
+        user: employee,
     };
 }
 
 /**
  * Mock sign-up — validates and adds employee to mock data.
  */
-async function mockSignUp(name: string, email: string, password: string): Promise<AuthResponse> {
+async function mockSignUp(name: string, email: string, _password: string): Promise<AuthResponse> {
     await new Promise((r) => setTimeout(r, 400));
 
-    const exists = MOCK_EMPLOYEES.find((e) => e.email === email);
+    const exists = MOCK_WORKERS.find((e) => e.profile.email === email);
     if (exists) {
         throw new Error("Email already registered");
     }
 
-    const newEmployee: Employee = {
-        id: String(MOCK_EMPLOYEES.length + 1),
-        name,
-        email,
-        password,
-        job: "staff",
-        active: true,
-        avatarUrl: "",
+    const now = new Date().toISOString();
+    const newEmployee: Worker = {
+        publicId: String(MOCK_WORKERS.length + 1),
+        role: "WAITER",
+        salary: 0,
+        isActive: true,
+        profile: {
+            fullName: name,
+            phone: null,
+            avatarImage: null,
+            email,
+            createdAt: now,
+            updatedAt: now,
+        },
+        createdAt: now,
+        updatedAt: now,
     };
 
-    MOCK_EMPLOYEES.push(newEmployee);
+    MOCK_WORKERS.push(newEmployee);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = newEmployee;
     return {
-        token: `mock-token-${newEmployee.id}-${Date.now()}`,
-        user: userWithoutPassword,
+        token: `mock-token-${newEmployee.publicId}-${Date.now()}`,
+        user: newEmployee,
     };
 }
 
@@ -134,7 +138,7 @@ export function logoutService(): void {
     localStorage.removeItem("user");
 }
 
-export function getStoredUser(): Omit<Employee, "password"> | null {
+export function getStoredUser(): Worker | null {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
 }

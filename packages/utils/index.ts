@@ -2,8 +2,8 @@
  * shared-utils — barrel export.
  *
  * Usage:
- *   import { MenuItem, Order, formatPrice } from "shared-utils";
- *   import type { MenuCategory } from "shared-utils/types/menu";
+ *   import { Product, Order, formatPrice } from "shared-utils";
+ *   import type { ProductCategory } from "shared-utils/types/product";
  */
 
 // Types

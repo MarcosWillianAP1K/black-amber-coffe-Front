@@ -1,15 +1,12 @@
-
-
 import { useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { DestakTitle } from "ui-shared/components/ui/DestakTitle";
-import { InfosUser } from "ui-shared/components/InfosUser";
 import { CompTime } from "ui-shared/components/CompTIme";
 import { useUsers } from "../hooks/useUsers";
 import { useEmployee } from "../hooks/useEmployee";
 import { useAuth } from "../hooks/useAuth";
 import type { User } from "shared-utils/types/user";
-import type { Employee } from "shared-utils/types/employee";
+import type { Worker } from "shared-utils/types/worker";
 
 export const Perfil = () => {
     const navigate = useNavigate();
@@ -23,13 +20,13 @@ export const Perfil = () => {
 
     const profile = useMemo(() => {
         if (resolvedKind === "user" && id) {
-            return users.find((user) => user.id === id) ?? null;
+            return users.find((user) => user.publicId === id) ?? null;
         }
 
         if (resolvedKind === "employee" && id) {
-            const match = employees.find((employee) => employee.id === id);
+            const match = employees.find((employee) => employee.publicId === id);
             if (match) return match;
-            if (loggedUser && loggedUser.id === id) return loggedUser;
+            if (loggedUser && loggedUser.publicId === id) return loggedUser;
             return null;
         }
 
@@ -40,7 +37,7 @@ export const Perfil = () => {
         (resolvedKind === "user" && usersLoading) ||
         (resolvedKind === "employee" && employeesLoading);
 
-    const isUserProfile = (value: User | Employee): value is User => "orders" in value;
+    const isUserProfile = (value: User | Worker): value is User => "email" in value && !("role" in value);
 
     const profileSubtitle = resolvedKind === "user"
         ? "Customer profile"
@@ -65,8 +62,12 @@ export const Perfil = () => {
     }
 
     const accountType = isUserProfile(profile) ? "Customer" : "Employee";
-    const statusLabel = profile.active ? "Active" : "Inactive";
-    const roleLabel = !isUserProfile(profile) ? (profile.job ?? "Staff") : "Loyalty member";
+    const fullName = profile.profile.fullName;
+    const email = isUserProfile(profile) ? profile.email : profile.profile.email;
+    const avatarImage = profile.profile.avatarImage;
+    const statusLabel = !isUserProfile(profile) ? (profile.isActive ? "Active" : "Inactive") : "Member";
+    const roleLabel = !isUserProfile(profile) ? (profile.role ?? "Staff") : "Loyalty member";
+    const profileId = isUserProfile(profile) ? profile.publicId : profile.publicId;
     const backLabel = (location.state as { from?: string } | null)?.from === "staff"
         ? "Back to Staff"
         : "Back";
@@ -93,24 +94,24 @@ export const Perfil = () => {
 
                     <div className="relative flex flex-col gap-6">
                         <div className="w-24 h-24 rounded-full overflow-hidden border border-(--Border2) bg-(--Button-background) flex items-center justify-center text-(--Primary) text-3xl font-primary font-extrabold">
-                            {profile.avatarUrl ? (
+                            {avatarImage ? (
                                 <img
-                                    src={profile.avatarUrl}
-                                    alt={profile.name}
+                                    src={avatarImage}
+                                    alt={fullName}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                profile.name.charAt(0).toUpperCase()
+                                fullName.charAt(0).toUpperCase()
                             )}
                         </div>
 
                         <div className="flex flex-col gap-3">
                             <div>
                                 <h2 className="text-(--Text-gray) text-2xl md:text-3xl font-primary font-extrabold tracking-wide">
-                                    {profile.name}
+                                    {fullName}
                                 </h2>
                                 <p className="text-(--Text-primary-off) text-sm font-secondary break-all">
-                                    {profile.email}
+                                    {email}
                                 </p>
                             </div>
 
@@ -118,9 +119,11 @@ export const Perfil = () => {
                                 <span className="px-4 py-1.5 rounded-full text-[11px] font-secondary font-semibold uppercase tracking-wider border border-(--Border2) bg-(--Select-background) text-(--Text-primary-off)">
                                     {accountType}
                                 </span>
-                                <span className={`px-4 py-1.5 rounded-full text-[11px] font-secondary font-semibold uppercase tracking-wider ${profile.active ? "bg-(--Afirmation)/15 text-(--Afirmation) border border-(--Afirmation)/40" : "bg-(--Negacion)/15 text-(--Negacion) border border-(--Negacion)/40"}`}>
-                                    {statusLabel}
-                                </span>
+                                {!isUserProfile(profile) && (
+                                    <span className={`px-4 py-1.5 rounded-full text-[11px] font-secondary font-semibold uppercase tracking-wider ${profile.isActive ? "bg-(--Afirmation)/15 text-(--Afirmation) border border-(--Afirmation)/40" : "bg-(--Negacion)/15 text-(--Negacion) border border-(--Negacion)/40"}`}>
+                                        {statusLabel}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="pt-3 text-xs font-secondary text-(--Text-gray)">
@@ -149,27 +152,25 @@ export const Perfil = () => {
 
                             <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Email</span>
-                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold break-all">{profile.email}</span>
+                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold break-all">{email}</span>
                             </div>
 
                             <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Member id</span>
-                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold">{profile.id}</span>
+                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold">{profileId}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="rounded-sm border border-(--Border) bg-(--Widget-background) p-6">
-                        {isUserProfile(profile) ? (
-                            <InfosUser orders={profile.orders} saved={profile.saved} score={profile.score} />
-                        ) : (
+                        {!isUserProfile(profile) ? (
                             <CompTime
-                                bankHours={profile.timeSlot?.bankHours}
-                                start={profile.timeSlot?.start}
-                                lunch={profile.timeSlot?.lunch}
-                                end={profile.timeSlot?.end}
-                                active={profile.active}
+                                active={profile.isActive}
                             />
+                        ) : (
+                            <div className="text-(--Text-primary-off) text-sm font-secondary">
+                                Member since {new Date(profile.profile.createdAt).toLocaleDateString()}
+                            </div>
                         )}
                     </div>
                 </div>

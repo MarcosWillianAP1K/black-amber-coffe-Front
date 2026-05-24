@@ -1,25 +1,49 @@
 /**
- * Order domain types — shared between admin and client apps.
+ * Order domain types aligned with backend order schema.
  */
 
 /** Possible order statuses */
 export const ORDER_STATUSES = [
-    "Created",
-    "In Progress",
-    "Ready",
-    "Late",
-    "Canceled",
+    "PENDING",
+    "IN PROGRESS",
+    "COMPLETED",
+    "LATE",
+    "CANCELLED",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-/** Represents a single customer order */
+/** Represents a single item within an order */
+export interface OrderItem {
+    id: number;
+    orderId: number;
+    productId: number;
+    quantity: number;
+    unitPrice: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Represents the payment attached to an order */
+export interface Payment {
+    id: number;
+    orderId: number;
+    amount: number;
+    method: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Represents a customer order */
 export interface Order {
-    id: string;
-    customer: string;
-    code: string;
-    items: Record<string, number>;
-    observations: string;
+    id: number;
+    publicId: string;
+    clientId: number;
+    totalAmount: number;
     status: OrderStatus;
-    total: number;
+    observation: string | null;
+    createdAt: string;
+    updatedAt: string;
+    items?: OrderItem[];
+    payment?: Payment | null;
 }

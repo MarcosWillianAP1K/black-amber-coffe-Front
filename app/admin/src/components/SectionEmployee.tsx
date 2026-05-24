@@ -2,71 +2,52 @@ import { useMemo, useState } from "react";
 import { CardEmployee } from "./ui/CardEmployee";
 import { SearchBar } from "ui-shared/components/ui/SearchBar";
 import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
-import type { Employee } from "shared-utils/types/employee";
+import type { Worker } from "shared-utils/types/worker";
 
 
 export interface SectionEmployeeProps {
-    employees: Employee[];
+    employees: Worker[];
     title: string;
-    onDeleteEmployee: (id: string) => void;
-    onBlockEmployee: (id: string) => void;
-    onViewEmployee: (id: string) => void;
+    onDeleteEmployee: (publicId: string) => void;
+    onBlockEmployee: (publicId: string) => void;
+    onViewEmployee: (publicId: string) => void;
 }
 
 export function SectionEmployee({ employees, title, onDeleteEmployee, onBlockEmployee, onViewEmployee }: SectionEmployeeProps) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "role-asc" | "bankhours-asc" | "bankhours-desc">("default");
+    const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "role-asc">("default");
     const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
     const filteredEmployees = useMemo(() => {
-        const getBankHoursValue = (bankHours?: string) => {
-            if (!bankHours) return 0;
-            const trimmed = bankHours.trim();
-            const timeMatch = trimmed.match(/^(\d+)(?::(\d+))?/);
-            if (timeMatch) {
-                const hours = Number(timeMatch[1]);
-                const minutes = timeMatch[2] ? Number(timeMatch[2]) : 0;
-                return hours + minutes / 60;
-            }
-            const numberMatch = trimmed.match(/[\d.]+/);
-            return numberMatch ? Number(numberMatch[0]) : 0;
-        };
-
         const query = searchTerm.trim().toLowerCase();
         let next = [...employees];
 
         if (query) {
             next = next.filter((employee) => {
-                const values = [employee.name, employee.email, employee.job ?? ""];
+                const values = [employee.profile.fullName, employee.profile.email, employee.role];
                 return values.some((value) => value.toLowerCase().includes(query));
             });
         }
 
         if (statusFilter === "active") {
-            next = next.filter((employee) => employee.active);
+            next = next.filter((employee) => employee.isActive);
         }
 
         if (statusFilter === "inactive") {
-            next = next.filter((employee) => !employee.active);
+            next = next.filter((employee) => !employee.isActive);
         }
 
         const nameCompare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
 
         switch (sortType) {
             case "name-asc":
-                next.sort((a, b) => nameCompare(a.name, b.name));
+                next.sort((a, b) => nameCompare(a.profile.fullName, b.profile.fullName));
                 break;
             case "name-desc":
-                next.sort((a, b) => nameCompare(b.name, a.name));
+                next.sort((a, b) => nameCompare(b.profile.fullName, a.profile.fullName));
                 break;
             case "role-asc":
-                next.sort((a, b) => nameCompare(a.job ?? "", b.job ?? ""));
-                break;
-            case "bankhours-asc":
-                next.sort((a, b) => getBankHoursValue(a.timeSlot?.bankHours) - getBankHoursValue(b.timeSlot?.bankHours) || nameCompare(a.name, b.name));
-                break;
-            case "bankhours-desc":
-                next.sort((a, b) => getBankHoursValue(b.timeSlot?.bankHours) - getBankHoursValue(a.timeSlot?.bankHours) || nameCompare(a.name, b.name));
+                next.sort((a, b) => nameCompare(a.role, b.role));
                 break;
             default:
                 break;
@@ -95,16 +76,6 @@ export function SectionEmployee({ employees, title, onDeleteEmployee, onBlockEmp
             label: "Role (A-Z)",
             action: () => setSortType("role-asc"),
             active: sortType === "role-asc",
-        },
-        {
-            label: "Comp time (Low to High)",
-            action: () => setSortType("bankhours-asc"),
-            active: sortType === "bankhours-asc",
-        },
-        {
-            label: "Comp time (High to Low)",
-            action: () => setSortType("bankhours-desc"),
-            active: sortType === "bankhours-desc",
         },
         {
             label: "All statuses",
@@ -150,7 +121,7 @@ export function SectionEmployee({ employees, title, onDeleteEmployee, onBlockEmp
             <div className="w-full h-full flex flex-wrap justify-center gap-6 overflow-y-auto">
                 {filteredEmployees.map((employee) => (
                     <CardEmployee
-                        key={employee.id}
+                        key={employee.publicId}
                         {...employee}
                         onDeleteEmployee={onDeleteEmployee}
                         onBlockEmployee={onBlockEmployee}

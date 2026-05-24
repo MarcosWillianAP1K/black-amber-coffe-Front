@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import { ButtonPrimary } from "ui-shared/components/ui/ButtonPrimary";
 import { FormOrder } from "./FormOrder";
 import type { FormOrderData } from "./FormOrder";
+import type { NewOrderData } from "../../hooks/useOrders";
 
 
 
 
 interface OverlayOrderProps {
-    onSave: (data: FormOrderData) => void;
+    onSave: (data: NewOrderData) => void;
 }
 
 export function OverlayOrder({ onSave }: OverlayOrderProps) {
@@ -29,6 +30,14 @@ export function OverlayOrder({ onSave }: OverlayOrderProps) {
         }
     }, [isOrderOverlayOpen]);
 
+    const handleSave = (data: FormOrderData) => {
+        onSave({
+            observation: data.observation,
+            totalAmount: data.totalAmount,
+            items: data.items,
+        });
+    };
+
     return (
 
 
@@ -44,7 +53,7 @@ export function OverlayOrder({ onSave }: OverlayOrderProps) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
                     <FormOrder
                         onClose={() => setIsOrderOverlayOpen(false)}
-                        onSave={onSave}
+                        onSave={handleSave}
                     />
 
                 </div>
@@ -56,4 +65,5 @@ export function OverlayOrder({ onSave }: OverlayOrderProps) {
     );
 
 }
+
 

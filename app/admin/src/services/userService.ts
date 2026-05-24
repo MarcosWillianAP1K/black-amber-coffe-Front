@@ -1,4 +1,4 @@
-import type { User } from "shared-utils/types/user";
+import type { User, UserUpdateInput } from "shared-utils/types/user";
 import { MOCK_USERS } from "shared-utils/MockBD.js";
 
 // In-memory store (will be replaced by API calls)
@@ -15,71 +15,63 @@ export async function fetchUsers(): Promise<User[]> {
     return [...users];
 }
 
-/** Update user (by ID) */
-export async function updateUser(id: string, updates: Partial<User>): Promise<User> {
+/** Update user (by publicId) */
+export async function updateUser(publicId: string, updates: Partial<UserUpdateInput>): Promise<User> {
     // TODO: Replace with actual API call
-    // Example: return await fetch(`/api/users/${id}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(updates),
-    // }).then((res) => res.json());
-
-    users = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
-    const updatedUser = users.find((u) => u.id === id);
-    if (!updatedUser) throw new Error(`User ${id} not found`);
+    const now = new Date().toISOString();
+    users = users.map((u) =>
+        u.publicId === publicId
+            ? {
+                ...u,
+                email: updates.email ?? u.email,
+                profile: {
+                    ...u.profile,
+                    fullName: updates.fullName ?? u.profile.fullName,
+                    phone: updates.phone ?? u.profile.phone,
+                    updatedAt: now,
+                },
+                updatedAt: now,
+            }
+            : u
+    );
+    const updatedUser = users.find((u) => u.publicId === publicId);
+    if (!updatedUser) throw new Error(`User ${publicId} not found`);
     return updatedUser;
 }
 
-/** Update user status (active/inactive) */
-export async function updateUserStatus(id: string, active: boolean): Promise<User> {
-    return updateUser(id, { active });
-}
-
 /** Delete a user */
-export async function deleteUser(id: string): Promise<void> {
+export async function deleteUser(publicId: string): Promise<void> {
     // TODO: Replace with actual API call
-    // Example: await fetch(`/api/users/${id}`, { method: "DELETE" });
-    users = users.filter((u) => u.id !== id);
+    users = users.filter((u) => u.publicId !== publicId);
 }
 
 /** Create a new user */
-export async function createUser(userData: Omit<User, "id">): Promise<User> {
+export async function createUser(userData: Omit<User, "publicId">): Promise<User> {
     // TODO: Replace with actual API call
-    // Example: return await fetch("/api/users", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(userData),
-    // }).then((res) => res.json());
-
+    const now = new Date().toISOString();
     const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
+        publicId: Math.random().toString(36).substr(2, 9),
         ...userData,
+        createdAt: now,
+        updatedAt: now,
     };
     users.push(newUser);
     return newUser;
 }
 
-/** Filter users by job or status */
+/** Filter users by name or email query */
 export async function filterUsers(
-    filters: { job?: string; active?: boolean }
+    filters: { query?: string }
 ): Promise<User[]> {
     // TODO: Replace with actual API call
-    // Example: return await fetch("/api/users", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(filters),
-    // }).then((res) => res.json());
-
     return users.filter((user) => {
-        let match = true;
-
-        if (filters.active !== undefined) {
-            match = match && user.active === filters.active;
+        if (filters.query) {
+            const q = filters.query.toLowerCase();
+            return (
+                user.profile.fullName.toLowerCase().includes(q) ||
+                user.email.toLowerCase().includes(q)
+            );
         }
-
-        return match;
+        return true;
     });
 }
-
-
-

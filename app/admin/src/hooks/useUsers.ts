@@ -12,9 +12,8 @@ import * as userService from "../services/userService";
 interface UseUsersReturn {
     users: User[];
     isLoading: boolean;
-    handleOptions: (id: string) => void;
-    deleteUser: (id: string) => void;
-    toggleUserStatus: (id: string) => void;
+    handleOptions: (publicId: string) => void;
+    deleteUser: (publicId: string) => void;
 }
 
 export function useUsers(): UseUsersReturn {
@@ -41,37 +40,24 @@ export function useUsers(): UseUsersReturn {
         return () => { cancelled = true; };
     }, []);
 
-    const handleOptions = useCallback((id: string) => {
+    const handleOptions = useCallback((publicId: string) => {
         // TODO: Open a dropdown/modal with options (edit, ban, delete, etc.)
-        console.log("Options for user:", id);
+        console.log("Options for user:", publicId);
     }, []);
 
-    const deleteUser = useCallback(async (id: string) => {
-        await userService.deleteUser(id);
+    const deleteUser = useCallback(async (publicId: string) => {
+        await userService.deleteUser(publicId);
         setUsers((prev) => {
-            const next = prev.filter((u) => u.id !== id);
+            const next = prev.filter((u) => u.publicId !== publicId);
             localStorage.setItem("users", JSON.stringify(next));
             return next;
         });
     }, []);
-
-    const toggleUserStatus = useCallback(async (id: string) => {
-        const user = users.find((u) => u.id === id);
-        if (!user) return;
-
-        const updated = await userService.updateUserStatus(id, !user.active);
-        setUsers((prev) => {
-            const next = prev.map((u) => (u.id === id ? updated : u));
-            localStorage.setItem("users", JSON.stringify(next));
-            return next;
-        });
-    }, [users]);
 
     return {
         users,
         isLoading,
         handleOptions,
         deleteUser,
-        toggleUserStatus,
     };
 }

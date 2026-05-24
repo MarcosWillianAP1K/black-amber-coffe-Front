@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
-import type { MenuItem, MenuItemFormData } from "shared-utils/types/menu";
+import type { Product, ProductInput } from "shared-utils/types/product";
 import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
 import { SearchBar } from "ui-shared/components/ui/SearchBar";
 import { TableMenuHeader } from "./TableMenuHeader";
@@ -19,14 +19,14 @@ import { MenuItemFormPanel } from "./MenuItemFormPanel";
 
 /** Callbacks contract — ready for API integration */
 export interface MenuItemHandlers {
-    onEdit: (id: string, data: MenuItemFormData) => void | Promise<void>;
-    onDelete: (id: string) => void | Promise<void>;
-    onCreate: (data: MenuItemFormData) => void | Promise<void>;
+    onEdit: (id: number, data: ProductInput) => void | Promise<void>;
+    onDelete: (id: number) => void | Promise<void>;
+    onCreate: (data: ProductInput) => void | Promise<void>;
 }
 
 interface TableMenuProps {
     /** List of menu items to display */
-    items: MenuItem[];
+    items: Product[];
     /** Handlers for CRUD operations */
     handlers: MenuItemHandlers;
     /** Table title */
@@ -39,7 +39,7 @@ interface TableMenuProps {
 
 type PanelState =
     | { mode: "closed" }
-    | { mode: "edit"; item: MenuItem }
+    | { mode: "edit"; item: Product }
     | { mode: "create" };
 
 export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = true, categories, }: TableMenuProps) {
@@ -48,12 +48,12 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
     const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "price-asc" | "price-desc">("default");
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
-    const handleEditClick = useCallback((item: MenuItem) => {
+    const handleEditClick = useCallback((item: Product) => {
         setPanelState({ mode: "edit", item });
     }, []);
 
     const handleDeleteClick = useCallback(
-        (id: string) => {
+        (id: number) => {
             handlers.onDelete(id);
             // Close panel if we're editing the deleted item
             setPanelState((prev) =>
@@ -74,7 +74,7 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
     }, []);
 
     const handlePanelSave = useCallback(
-        (data: MenuItemFormData) => {
+        (data: ProductInput) => {
             if (panelState.mode === "edit") {
                 handlers.onEdit(panelState.item.id, data);
             } else if (panelState.mode === "create") {

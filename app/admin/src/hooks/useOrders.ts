@@ -11,18 +11,25 @@ import * as orderService from "../services/orderService";
 
 /** Maps UI button actions to their resulting OrderStatus */
 const ACTION_STATUS_MAP: Record<string, OrderStatus> = {
-    start: "In Progress",
-    hold: "Created",
-    ready: "Ready",
+    start: "IN PROGRESS",
+    hold: "PENDING",
+    ready: "COMPLETED",
 };
 
 const COMPLETED_STORAGE_KEY = "completedOrders";
 
+/** Minimal data needed from the form to create a new order */
+export interface NewOrderData {
+    observation?: string | null;
+    totalAmount: number;
+    items?: Array<{ productId: number; quantity: number; unitPrice: number }>;
+}
+
 interface UseOrdersReturn {
     orders: Order[];
     isLoading: boolean;
-    handleAction: (orderId: string, action: string) => void;
-    addOrder: (data: Omit<Order, "id" | "status"> & { status?: OrderStatus }) => void;
+    handleAction: (orderId: number, action: string) => void;
+    addOrder: (data: NewOrderData) => void;
 }
 
 export function useOrders(): UseOrdersReturn {
@@ -47,7 +54,7 @@ export function useOrders(): UseOrdersReturn {
         return () => { cancelled = true; };
     }, []);
 
-    const handleAction = useCallback(async (orderId: string, action: string) => {
+    const handleAction = useCallback(async (orderId: number, action: string) => {
         if (action === "complete") {
             const completed = await orderService.completeOrder(orderId);
             setOrders((prev) => {
@@ -83,18 +90,27 @@ export function useOrders(): UseOrdersReturn {
         });
     }, []);
 
-    const addOrder = useCallback(async (data: Omit<Order, "id" | "status"> & { status?: OrderStatus }) => {
-        const id = typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const addOrder = useCallback(async (data: NewOrderData) => {
+        const id = Date.now();
+        const now = new Date().toISOString();
         const newOrder: Order = {
             id,
-            status: data.status ?? "Created",
-            customer: data.customer,
-            code: data.code,
-            items: data.items,
-            observations: data.observations,
-            total: data.total,
+            publicId: `ord-${id}`,
+            clientId: 0,
+            totalAmount: data.totalAmount,
+            status: "PENDING",
+            observation: data.observation ?? null,
+            createdAt: now,
+            updatedAt: now,
+            items: data.items?.map((item, idx) => ({
+                id: idx,
+                orderId: id,
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                createdAt: now,
+                updatedAt: now,
+            })),
         };
 
         const created = await orderService.createOrder(newOrder);

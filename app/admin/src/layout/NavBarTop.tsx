@@ -19,7 +19,7 @@ export function NavBarTop() {
     const { user } = useAuth();
 
     const profilePath = user
-        ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.id)
+        ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.publicId)
         : APP_ROUTES.PERFIL;
 
     const options: OptionConfigProps[] = useMemo(() => [
