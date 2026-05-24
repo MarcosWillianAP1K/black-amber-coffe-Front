@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'shared-utils': path.resolve(__dirname, '../../packages/utils'),
+      'ui-shared': path.resolve(__dirname, '../../packages/ui-shared'),
     },
   },
   server: {
