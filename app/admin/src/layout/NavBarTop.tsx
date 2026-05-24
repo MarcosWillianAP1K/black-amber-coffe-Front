@@ -29,9 +29,7 @@ export function NavBarTop() {
         },
         {
             label: "Settings",
-            action: () => {
-                console.log("Settings clicked");
-            }
+            action: () => navigate(APP_ROUTES.SETTINGS),
         },
         {
             label: "Logout",

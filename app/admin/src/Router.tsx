@@ -17,6 +17,7 @@ import { Staff } from "./pages/content/Staff";
 import { Login } from "./pages/Login";
 import { SignUp } from "./pages/SignUp";
 import { Perfil } from "./pages/Perfil";
+import { Config } from "./pages/Config";
 import { logoutService, getStoredToken } from "./services/authService";
 
 // Componente genérico para as telas não finalizadas
@@ -103,6 +104,14 @@ export const router = createBrowserRouter([
     {
         path: APP_ROUTES.SIGNUP,
         element: <SignUp />
+    },
+    {
+        path: APP_ROUTES.SETTINGS,
+        element: (
+            <RequireAuth>
+                <Config />
+            </RequireAuth>
+        )
     },
     {
         path: APP_ROUTES.PERFIL,

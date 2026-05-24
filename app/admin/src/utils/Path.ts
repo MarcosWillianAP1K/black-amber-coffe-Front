@@ -7,6 +7,7 @@ export const APP_ROUTES = {
     INVENTORY: "/inventory",
     ANALYTICS: "/analytics",
     STAFF: "/staff",
+    SETTINGS: "/settings",
     SUPPORT: "/support",
     LOGOUT: "/logout",
     LOGIN: "/login",

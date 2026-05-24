@@ -88,11 +88,11 @@ export const Perfil = () => {
                 </button>
             </div>
 
-            <div className="grid w-full gap-8 xl:grid-cols-[360px_1fr]">
-                <div className="relative overflow-hidden rounded-xl border-2 border-(--Border2) bg-(--Widget-background) p-7 shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+            <div className="grid w-full gap-6 xl:grid-cols-[340px_1fr]">
+                <div className="relative overflow-hidden rounded-sm border border-(--Border) bg-(--Widget-background) p-6">
 
                     <div className="relative flex flex-col gap-6">
-                        <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-(--Border2) bg-(--Button-background) flex items-center justify-center text-(--Primary) text-4xl font-primary font-extrabold shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border border-(--Border2) bg-(--Button-background) flex items-center justify-center text-(--Primary) text-3xl font-primary font-extrabold">
                             {profile.avatarUrl ? (
                                 <img
                                     src={profile.avatarUrl}
@@ -106,10 +106,10 @@ export const Perfil = () => {
 
                         <div className="flex flex-col gap-3">
                             <div>
-                                <h2 className="text-(--Text-gray) text-3xl md:text-4xl font-primary font-extrabold tracking-wide">
+                                <h2 className="text-(--Text-gray) text-2xl md:text-3xl font-primary font-extrabold tracking-wide">
                                     {profile.name}
                                 </h2>
-                                <p className="text-(--Text-primary-off) text-base font-secondary break-all">
+                                <p className="text-(--Text-primary-off) text-sm font-secondary break-all">
                                     {profile.email}
                                 </p>
                             </div>
@@ -123,7 +123,7 @@ export const Perfil = () => {
                                 </span>
                             </div>
 
-                            <div className="pt-3 text-sm font-secondary text-(--Text-gray)">
+                            <div className="pt-3 text-xs font-secondary text-(--Text-gray)">
                                 <span className="text-(--Primary-off) font-semibold">Function:</span> {roleLabel}
                             </div>
                         </div>
@@ -131,35 +131,35 @@ export const Perfil = () => {
                 </div>
 
                 <div className="flex flex-col gap-6">
-                    <div className="rounded-xl border-2 border-(--Border) bg-(--Widget-background) p-6">
-                        <h3 className="text-(--Primary) text-sm font-primary font-extrabold tracking-[0.3em] uppercase">
+                    <div className="rounded-sm border border-(--Border) bg-(--Widget-background) p-6">
+                        <h3 className="text-(--Primary) text-xs font-primary font-extrabold tracking-[0.3em] uppercase">
                             Account overview
                         </h3>
 
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
-                            <div className="flex flex-col gap-1 rounded-lg border border-(--Border2) bg-(--Page-background) p-5">
+                            <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Account type</span>
-                                <span className="text-(--Text-gray) text-lg font-primary font-extrabold">{accountType}</span>
+                                <span className="text-(--Text-gray) text-base font-primary font-extrabold">{accountType}</span>
                             </div>
 
-                            <div className="flex flex-col gap-1 rounded-lg border border-(--Border2) bg-(--Page-background) p-5">
+                            <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Status</span>
-                                <span className="text-(--Text-gray) text-lg font-primary font-extrabold">{statusLabel}</span>
+                                <span className="text-(--Text-gray) text-base font-primary font-extrabold">{statusLabel}</span>
                             </div>
 
-                            <div className="flex flex-col gap-1 rounded-lg border border-(--Border2) bg-(--Page-background) p-5">
+                            <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Email</span>
-                                <span className="text-(--Text-gray) text-base font-primary font-extrabold break-all">{profile.email}</span>
+                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold break-all">{profile.email}</span>
                             </div>
 
-                            <div className="flex flex-col gap-1 rounded-lg border border-(--Border2) bg-(--Page-background) p-5">
+                            <div className="flex flex-col gap-1 rounded-sm border border-(--Border) bg-(--Page-background) p-4">
                                 <span className="text-[11px] font-secondary font-semibold uppercase tracking-wider text-(--Text-primary-off)">Member id</span>
-                                <span className="text-(--Text-gray) text-base font-primary font-extrabold">{profile.id}</span>
+                                <span className="text-(--Text-gray) text-sm font-primary font-extrabold">{profile.id}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border-2 border-(--Border) bg-(--Widget-background) p-6">
+                    <div className="rounded-sm border border-(--Border) bg-(--Widget-background) p-6">
                         {isUserProfile(profile) ? (
                             <InfosUser orders={profile.orders} saved={profile.saved} score={profile.score} />
                         ) : (
