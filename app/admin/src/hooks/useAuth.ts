@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginService, signUpService, logoutService, getStoredUser, getStoredToken } from "../services/authService";
+import {
+    loginService,
+    signUpService,
+    logoutService,
+    refreshTokenService,
+    logoutApiService,
+    getStoredUser,
+    getStoredToken,
+    getStoredRefreshToken,
+} from "../services/authService";
 import { APP_ROUTES } from "../utils/Path";
 import type { Worker } from "shared-utils/types/worker";
 
@@ -10,6 +19,7 @@ export function useAuth() {
 
     const [user, setUser] = useState<Worker | null>(getStoredUser);
     const [token, setToken] = useState<string | null>(getStoredToken);
+    const [refreshToken, setRefreshToken] = useState<string | null>(getStoredRefreshToken);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +32,9 @@ export function useAuth() {
             const data = await loginService(email, password);
             setUser(data.user);
             setToken(data.token);
+            if (data.refreshToken) {
+                setRefreshToken(data.refreshToken);
+            }
             navigate(APP_ROUTES.DASHBOARD);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Login failed");
@@ -37,6 +50,9 @@ export function useAuth() {
             const data = await signUpService(name, email, password);
             setUser(data.user);
             setToken(data.token);
+            if (data.refreshToken) {
+                setRefreshToken(data.refreshToken);
+            }
             navigate(APP_ROUTES.DASHBOARD);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Sign up failed");
@@ -45,11 +61,30 @@ export function useAuth() {
         }
     }
 
-    function logout() {
+    async function logout(logoutAllDevices = false) {
+        if (refreshToken) {
+            try {
+                await logoutApiService(refreshToken, logoutAllDevices);
+            } catch {
+                // Ignore logout API errors; we still clear local session.
+            }
+        }
+
         logoutService();
         setUser(null);
         setToken(null);
+        setRefreshToken(null);
         navigate(APP_ROUTES.LOGIN);
+    }
+
+    async function refreshSession() {
+        if (!refreshToken) {
+            throw new Error("Refresh token missing");
+        }
+
+        const data = await refreshTokenService(refreshToken);
+        setToken(data.data.accessToken);
+        setRefreshToken(data.data.refreshToken);
     }
 
     function clearError() {
@@ -59,11 +94,13 @@ export function useAuth() {
     return {
         user,
         token,
+        refreshToken,
         loading,
         error,
         isAuthenticated,
         login,
         signUp,
+        refreshSession,
         logout,
         clearError,
     };

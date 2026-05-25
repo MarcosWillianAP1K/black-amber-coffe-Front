@@ -13,6 +13,7 @@ import {
 
 import { APP_ROUTES } from "../utils/Path";
 import { getStoredUser } from "../services/authService";
+import { useAuth } from "../hooks/useAuth";
 
 import { NavItem } from "ui-shared/components/ui/NavItem";
 import { PerfilNav } from "ui-shared/components/ui/PerfilNav";
@@ -30,7 +31,9 @@ const mainLinks = [
 
 export function NavBarLeft() {
     const user = getStoredUser();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
     const navButtonClass = "w-full flex items-center gap-4 px-6 py-3 text-sm font-primary font-medium transition-colors border-r-4 text-(--Text-primary-off) border-transparent hover:bg-(--Button-background) hover:text-(--Text-gray)";
@@ -85,9 +88,9 @@ export function NavBarLeft() {
                 cancelLabel="Cancel"
                 danger
                 onCancel={() => setIsLogoutOpen(false)}
-                onConfirm={() => {
+                onConfirm={async () => {
                     setIsLogoutOpen(false);
-                    navigate(APP_ROUTES.LOGOUT);
+                    await logout();
                 }}
             />
         </>

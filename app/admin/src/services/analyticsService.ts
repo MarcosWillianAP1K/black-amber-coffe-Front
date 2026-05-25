@@ -69,7 +69,7 @@ export async function fetchAnalytics(): Promise<AnalyticsData> {
             },
             {
                 id: "users",
-                title: "Total User",
+                title: "Total Customers",
                 value: "40,689",
                 delta: "+8.5%",
                 deltaLabel: "Up from yesterday",

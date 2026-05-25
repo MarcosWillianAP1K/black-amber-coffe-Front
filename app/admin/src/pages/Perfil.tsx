@@ -2,25 +2,25 @@ import { useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { DestakTitle } from "ui-shared/components/ui/DestakTitle";
 import { CompTime } from "ui-shared/components/CompTIme";
-import { useUsers } from "../hooks/useUsers";
+import { useCustomers } from "../hooks/useCustomers";
 import { useEmployee } from "../hooks/useEmployee";
 import { useAuth } from "../hooks/useAuth";
-import type { User } from "shared-utils/types/user";
+import type { User as Customer } from "shared-utils/types/user";
 import type { Worker } from "shared-utils/types/worker";
 
 export const Perfil = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { kind, id } = useParams();
-    const { users, isLoading: usersLoading } = useUsers();
+    const { customers, isLoading: customersLoading } = useCustomers();
     const { employees, isLoading: employeesLoading } = useEmployee();
     const { user: loggedUser } = useAuth();
 
-    const resolvedKind = kind === "user" || kind === "employee" ? kind : null;
+    const resolvedKind = kind === "customer" || kind === "employee" ? kind : null;
 
     const profile = useMemo(() => {
-        if (resolvedKind === "user" && id) {
-            return users.find((user) => user.publicId === id) ?? null;
+        if (resolvedKind === "customer" && id) {
+            return customers.find((customer) => customer.publicId === id) ?? null;
         }
 
         if (resolvedKind === "employee" && id) {
@@ -31,15 +31,15 @@ export const Perfil = () => {
         }
 
         return resolvedKind ? null : loggedUser ?? null;
-    }, [resolvedKind, id, users, employees, loggedUser]);
+    }, [resolvedKind, id, customers, employees, loggedUser]);
 
     const isLoading =
-        (resolvedKind === "user" && usersLoading) ||
+        (resolvedKind === "customer" && customersLoading) ||
         (resolvedKind === "employee" && employeesLoading);
 
-    const isUserProfile = (value: User | Worker): value is User => "email" in value && !("role" in value);
+    const isCustomerProfile = (value: Customer | Worker): value is Customer => "email" in value && !("role" in value);
 
-    const profileSubtitle = resolvedKind === "user"
+    const profileSubtitle = resolvedKind === "customer"
         ? "Customer profile"
         : resolvedKind === "employee"
             ? "Employee profile"
@@ -61,13 +61,13 @@ export const Perfil = () => {
         );
     }
 
-    const accountType = isUserProfile(profile) ? "Customer" : "Employee";
+    const accountType = isCustomerProfile(profile) ? "Customer" : "Employee";
     const fullName = profile.profile.fullName;
-    const email = isUserProfile(profile) ? profile.email : profile.profile.email;
+    const email = isCustomerProfile(profile) ? profile.email : profile.profile.email;
     const avatarImage = profile.profile.avatarImage;
-    const statusLabel = !isUserProfile(profile) ? (profile.isActive ? "Active" : "Inactive") : "Member";
-    const roleLabel = !isUserProfile(profile) ? (profile.role ?? "Staff") : "Loyalty member";
-    const profileId = isUserProfile(profile) ? profile.publicId : profile.publicId;
+    const statusLabel = !isCustomerProfile(profile) ? (profile.isActive ? "Active" : "Inactive") : "Member";
+    const roleLabel = !isCustomerProfile(profile) ? (profile.role ?? "Staff") : "Loyalty member";
+    const profileId = isCustomerProfile(profile) ? profile.publicId : profile.publicId;
     const backLabel = (location.state as { from?: string } | null)?.from === "staff"
         ? "Back to Staff"
         : "Back";
@@ -119,7 +119,7 @@ export const Perfil = () => {
                                 <span className="px-4 py-1.5 rounded-full text-[11px] font-secondary font-semibold uppercase tracking-wider border border-(--Border2) bg-(--Select-background) text-(--Text-primary-off)">
                                     {accountType}
                                 </span>
-                                {!isUserProfile(profile) && (
+                                {!isCustomerProfile(profile) && (
                                     <span className={`px-4 py-1.5 rounded-full text-[11px] font-secondary font-semibold uppercase tracking-wider ${profile.isActive ? "bg-(--Afirmation)/15 text-(--Afirmation) border border-(--Afirmation)/40" : "bg-(--Negacion)/15 text-(--Negacion) border border-(--Negacion)/40"}`}>
                                         {statusLabel}
                                     </span>
@@ -163,7 +163,7 @@ export const Perfil = () => {
                     </div>
 
                     <div className="rounded-sm border border-(--Border) bg-(--Widget-background) p-6">
-                        {!isUserProfile(profile) ? (
+                        {!isCustomerProfile(profile) ? (
                             <CompTime
                                 active={profile.isActive}
                             />

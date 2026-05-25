@@ -18,6 +18,9 @@ export function NavBarTop() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    const avatarInitial = user?.profile.fullName.trim().charAt(0).toUpperCase() ?? "U";
+    const avatarImage = user?.profile.avatarImage ?? null;
+
     const profilePath = user
         ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.publicId)
         : APP_ROUTES.PERFIL;
@@ -52,14 +55,20 @@ export function NavBarTop() {
                 <button
                     type="button"
                     onClick={() => navigate(profilePath)}
-                    className="w-8 h-8 bg-(--White) rounded-full cursor-pointer overflow-hidden"
+                    className="w-8 h-8 bg-(--Widget-background) rounded-full cursor-pointer overflow-hidden flex items-center justify-center"
                     aria-label="Open profile"
                 >
-                    <img
-                        src="https://github.com/MarcosWillian.png" // Puxando sua foto do Github de exemplo
-                        alt="User"
-                        className="rounded-full overflow-hidden w-full h-full object-cover"
-                    />
+                    {avatarImage ? (
+                        <img
+                            src={avatarImage}
+                            alt={user?.profile.fullName ?? "User"}
+                            className="rounded-full overflow-hidden w-full h-full object-cover"
+                        />
+                    ) : (
+                        <span className="text-(--Primary) text-xs font-primary font-bold">
+                            {avatarInitial}
+                        </span>
+                    )}
                 </button>
             </div>
 

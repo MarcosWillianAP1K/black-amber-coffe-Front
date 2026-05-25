@@ -1,7 +1,7 @@
 /**
  * useEmployee — Custom hook encapsulating employee/staff state and operations.
  *
- * Provides employees list and handlers ready to plug into SectionUsers.
+ * Provides employees list and handlers ready to plug into SectionEmployee.
  * Uses employeeService internally — when API is ready, only the service changes.
  */
 

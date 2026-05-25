@@ -32,7 +32,7 @@ export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmploy
                 <OptionsEllipsis
                     options={[
                         { label: "View Profile", action: () => onViewEmployee(publicId) },
-                        { label: "Block User", action: () => onBlockEmployee(publicId) },
+                        { label: "Block Employee", action: () => onBlockEmployee(publicId) },
                         { label: "Delete", action: () => onDeleteEmployee(publicId), danger: true },
                     ]}
                 />
