@@ -1,8 +1,9 @@
 import type { Worker } from "shared-utils/types/worker";
 import { MOCK_WORKERS } from "shared-utils/MockBD.js";
 
-const URL_API = "http://localhost:3000/api";
-const USE_MOCK = true; // Toggle to false when API is ready
+// API endpoint and mock toggle
+const URL_API = "http://localhost:8080/v1/api/auth";
+const USE_MOCK = false; // Toggle to false when API is ready
 
 
 export interface AuthResponse {
@@ -15,7 +16,8 @@ export interface AuthResponse {
  * Mock login — searches MOCK_WORKERS by email+password.
  * Simulates a real API delay.
  */
-async function mockLogin(email: string, password: string): Promise<AuthResponse> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function mockLogin(email: string, _password: string): Promise<AuthResponse> {
     await new Promise((r) => setTimeout(r, 400));
 
     const employee = MOCK_WORKERS.find(
@@ -39,6 +41,7 @@ async function mockLogin(email: string, password: string): Promise<AuthResponse>
 /**
  * Mock sign-up — validates and adds employee to mock data.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function mockSignUp(name: string, email: string, _password: string): Promise<AuthResponse> {
     await new Promise((r) => setTimeout(r, 400));
 
@@ -95,7 +98,7 @@ async function apiLogin(email: string, password: string): Promise<AuthResponse> 
  * Real API sign-up — calls POST /api/signup.
  */
 async function apiSignUp(name: string, email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${URL_API}/signup`, {
+    const response = await fetch(`${URL_API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -140,7 +143,15 @@ export function logoutService(): void {
 
 export function getStoredUser(): Worker | null {
     const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
+    if (!raw || raw === "undefined") {
+        return null;
+    }
+
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
 }
 
 export function getStoredToken(): string | null {

@@ -7,6 +7,9 @@ WORKDIR /app
 
 # Copia os arquivos de configuração primeiro (isso otimiza o cache do Docker)
 COPY package*.json ./
+COPY app/admin/package*.json ./app/admin/
+COPY packages/ui-shared/package*.json ./packages/ui-shared/
+COPY packages/utils/package*.json ./packages/utils/
 
 # Instala as dependências
 RUN npm install
@@ -15,7 +18,7 @@ RUN npm install
 COPY . .
 
 # Roda o comando do Vite para gerar a versão final (cria a pasta /dist)
-RUN npm run build
+RUN npm run build:admin
 
 # ==========================================
 
@@ -24,7 +27,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copia APENAS a pasta /dist gerada no Estágio 1 para a pasta pública do Nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/app/admin/dist /usr/share/nginx/html
 
 # Libera a porta 80 do container
 EXPOSE 80
