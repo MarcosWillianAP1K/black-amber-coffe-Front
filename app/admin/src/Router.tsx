@@ -7,6 +7,10 @@ import { APP_ROUTES } from "./utils/Path";
 // Importando o Layout Pai
 import { Template } from "./pages/Template";
 
+// Importando o RouteProtector para proteger as rotas
+import { RouteProtector } from "./components/RouteProtector";
+import { WORKER_ROLES } from "shared-utils/types/worker";
+
 // Importando as Telas Prontas
 import { Dashboard } from "./pages/content/Dashboard";
 import { Menu } from "./pages/content/Menu";
@@ -46,14 +50,17 @@ const LogoutRoute = () => {
     return <Navigate to={APP_ROUTES.LOGIN} replace />;
 };
 
+
+const allowedRoles = WORKER_ROLES.map(role => role.toLowerCase()).filter(role => role === 'admin'); 
+
 // Mapa central de rotas do sistema
 export const router = createBrowserRouter([
     {
         path: "/",
         element: (
-            <RequireAuth>
+            <RouteProtector>
                 <Template />
-            </RequireAuth>
+            </RouteProtector>
         ),
         children: [
             {
@@ -66,7 +73,9 @@ export const router = createBrowserRouter([
             },
             {
                 path: APP_ROUTES.MENU,
-                element: <Menu />
+                element: <RouteProtector allowedRoles={allowedRoles}>
+                    <Menu />
+                </RouteProtector>
             },
             {
                 path: APP_ROUTES.LIVE_ORDERS,
@@ -74,15 +83,21 @@ export const router = createBrowserRouter([
             },
             {
                 path: APP_ROUTES.INVENTORY,
-                element: <Inventory />
+                element: <RouteProtector allowedRoles={allowedRoles}>
+                    <Inventory />
+                </RouteProtector>
             },
             {
                 path: APP_ROUTES.ANALYTICS,
-                element: <Analytics />
+                element: <RouteProtector allowedRoles={allowedRoles}>
+                    <Analytics />
+                </RouteProtector>
             },
             {
                 path: APP_ROUTES.STAFF,
-                element: <Staff />
+                element: <RouteProtector allowedRoles={allowedRoles}>
+                    <Staff />
+                </RouteProtector>
             }
         ]
     },

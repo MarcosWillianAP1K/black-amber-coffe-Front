@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FormBoxText } from "ui-shared/components/ui/FormBoxText";
 import { ButtonPrimary } from "ui-shared/components/ui/ButtonPrimary";
 import { LinkTextLogin } from "ui-shared/components/ui/LinkTextLogin";
@@ -7,6 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 
 
 export function SignUp() {
+    const navigate = useNavigate();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -22,7 +24,10 @@ export function SignUp() {
             return;
         }
 
-        await signUp(name, email, password);
+        const success = await signUp(name, email, password);
+        if (success) {
+            navigate(APP_ROUTES.DASHBOARD);
+        }
     };
 
     const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;

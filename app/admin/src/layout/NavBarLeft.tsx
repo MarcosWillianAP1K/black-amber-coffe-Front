@@ -52,6 +52,7 @@ export function NavBarLeft() {
             {/* SEÇÃO 2: Navegação Principal */}
             <nav className="flex-1">
                 {mainLinks.map((link) => (
+                
                     <NavItem
                         key={link.path} // Usar o path como key é mais seguro que o label!
                         icon={link.icon}
