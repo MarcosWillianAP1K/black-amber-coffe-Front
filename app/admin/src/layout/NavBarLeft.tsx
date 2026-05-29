@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
     Menu,
@@ -11,8 +10,7 @@ import {
     LogOut
 } from "lucide-react";
 
-import { APP_ROUTES } from "../utils/Path";
-import { getStoredUser } from "../services/authService";
+import { APP_ROUTES, ADMIN_ROUTES } from "../utils/Path";
 import { useAuth } from "../hooks/useAuth";
 
 import { NavItem } from "ui-shared/components/ui/NavItem";
@@ -30,13 +28,26 @@ const mainLinks = [
 ];
 
 export function NavBarLeft() {
-    const user = getStoredUser();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
     const navButtonClass = "w-full flex items-center gap-4 px-6 py-3 text-sm font-primary font-medium transition-colors border-r-4 text-(--Text-primary-off) border-transparent hover:bg-(--Button-background) hover:text-(--Text-gray)";
+    const userRole = user?.role?.toLowerCase();
+    const visibleLinks = mainLinks.filter((link) => {
+        if (ADMIN_ROUTES.includes(link.path) && userRole === "admin") {
+            return true;
+        }
+
+        if (!ADMIN_ROUTES.includes(link.path)) {
+            return true;
+        }
+
+        return false;
+    });
+
+
+    
+
 
     return (
         <>
@@ -51,8 +62,7 @@ export function NavBarLeft() {
 
             {/* SEÇÃO 2: Navegação Principal */}
             <nav className="flex-1">
-                {mainLinks.map((link) => (
-                
+                {visibleLinks.map((link) => (
                     <NavItem
                         key={link.path} // Usar o path como key é mais seguro que o label!
                         icon={link.icon}

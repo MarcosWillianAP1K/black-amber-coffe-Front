@@ -9,7 +9,7 @@ import { Template } from "./pages/Template";
 
 // Importando o RouteProtector para proteger as rotas
 import { RouteProtector } from "./components/RouteProtector";
-import { WORKER_ROLES } from "shared-utils/types/worker";
+import { allowedRoles } from "shared-utils/types/worker";
 
 // Importando as Telas Prontas
 import { Dashboard } from "./pages/content/Dashboard";
@@ -51,7 +51,7 @@ const LogoutRoute = () => {
 };
 
 
-const allowedRoles = WORKER_ROLES.map(role => role.toLowerCase()).filter(role => role === 'admin'); 
+
 
 // Mapa central de rotas do sistema
 export const router = createBrowserRouter([

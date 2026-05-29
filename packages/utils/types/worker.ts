@@ -6,6 +6,8 @@
 export const WORKER_ROLES = ["ADMIN", "BARISTA", "BARMAN", "WAITER"] as const;
 export type WorkerRole = (typeof WORKER_ROLES)[number];
 
+export const allowedRoles = WORKER_ROLES.map(role => role.toLowerCase()).filter(role => role === 'admin'); 
+
 export interface WorkerProfile {
     fullName: string;
     phone: string | null;

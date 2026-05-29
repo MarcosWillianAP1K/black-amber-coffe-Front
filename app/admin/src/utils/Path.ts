@@ -15,3 +15,11 @@ export const APP_ROUTES = {
     PERFIL: "/perfil",
     PERFIL_DETAIL: "/perfil/:kind/:id"
 };
+
+
+export const ADMIN_ROUTES = [
+    APP_ROUTES.MENU,
+    APP_ROUTES.INVENTORY,
+    APP_ROUTES.ANALYTICS,
+    APP_ROUTES.STAFF
+];
