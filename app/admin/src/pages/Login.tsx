@@ -16,8 +16,8 @@ export function Login() {
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         clearError();
-        const success = await login(email, password);
-        if (success) {
+        const data = await login(email, password);
+        if (data?.token) {
             navigate(APP_ROUTES.DASHBOARD);
         }
     };

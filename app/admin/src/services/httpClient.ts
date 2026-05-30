@@ -1,4 +1,4 @@
-import { getStoredRefreshToken, getStoredToken, logoutService, refreshTokenService } from "./authService";
+import { getStoredRefreshToken, getStoredToken, logoutService, refreshTokenService } from "./authService.ts";
 
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
     const headers = new Headers(init.headers);

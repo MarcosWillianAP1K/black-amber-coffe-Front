@@ -24,9 +24,14 @@ export function SignUp() {
             return;
         }
 
-        const success = await signUp(name, email, password);
-        if (success) {
+        const data = await signUp(name, email, password);
+        if (data?.token) {
             navigate(APP_ROUTES.DASHBOARD);
+            return;
+        }
+
+        if (data) {
+            navigate(APP_ROUTES.LOGIN);
         }
     };
 

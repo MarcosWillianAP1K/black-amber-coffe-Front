@@ -23,7 +23,7 @@ import { SignUp } from "./pages/SignUp";
 import { Perfil } from "./pages/Perfil";
 import { Settings } from "./pages/Settings";
 import { Support } from "./pages/Support";
-import { logoutService, getStoredToken } from "./services/authService";
+import { logoutService, getStoredToken } from "./services/authService.ts";
 
 // Componente genérico para as telas não finalizadas
 // eslint-disable-next-line react-refresh/only-export-components, @typescript-eslint/no-unused-vars

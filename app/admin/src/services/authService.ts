@@ -1,10 +1,17 @@
-import type { Worker } from "shared-utils/types/worker";
+import type { Worker, GetWorkerResponse } from "shared-utils/types/worker";
+import type {
+    LoginResponse,
+    RegisterResponse,
+    RefreshTokenResponse,
+    LogoutResponse,
+} from "shared-utils/types/auth";
+import { API } from "shared-utils/core/APIroutes";
 import { MOCK_WORKERS } from "shared-utils/MockBD.js";
 
 // API endpoint and mock toggle
-const URL_API = "http://localhost:8080/v1/api/auth";
 const USE_MOCK = false; // Toggle to false when API is ready
 
+const DEFAULT_WORKER_ROLE: Worker["role"] = "BARISTA";
 
 export interface AuthResponse {
     token: string | null;
@@ -12,67 +19,15 @@ export interface AuthResponse {
     user: Worker;
 }
 
-interface ApiAuthUser {
-    publicId: string;
-    email: string;
-    userType: "worker" | "customer" | string;
-    profile: {
-        fullName: string;
-        phone: string | null;
-        avatarImage: string | null;
-        createdAt: string;
-        updatedAt?: string;
-    };
-}
-
-interface ApiAuthResponse {
-    data: {
-        accessToken: string;
-        refreshToken: string;
-        user: ApiAuthUser;
-    };
-}
-
-interface ApiRegisterResponse {
-    data: {
-        publicId: string;
-        email: string;
-        createdAt: string;
-        updatedAt: string;
-        profile: {
-            fullName: string;
-            phone: string | null;
-            avatarImage: string | null;
-            createdAt: string;
-        };
-    };
-}
-
-export interface RefreshTokenResponse {
-    data: {
-        accessToken: string;
-        refreshToken: string;
-    };
-}
-
-export interface LogoutResponse {
-    data: {
-        success: boolean;
-    };
-}
-
-
 /**
- * Mock login — searches MOCK_WORKERS by email+password.
+ * Mock login - searches MOCK_WORKERS by email+password.
  * Simulates a real API delay.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function mockLogin(email: string, _password: string): Promise<AuthResponse> {
     await new Promise((r) => setTimeout(r, 400));
 
-    const employee = MOCK_WORKERS.find(
-        (e) => e.profile.email === email
-    );
+    const employee = MOCK_WORKERS.find((e) => e.profile.email === email);
 
     if (!employee) {
         throw new Error("Email or password incorrect");
@@ -90,7 +45,7 @@ async function mockLogin(email: string, _password: string): Promise<AuthResponse
 }
 
 /**
- * Mock sign-up — validates and adds employee to mock data.
+ * Mock sign-up - validates and adds employee to mock data.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function mockSignUp(name: string, email: string, _password: string): Promise<AuthResponse> {
@@ -104,7 +59,7 @@ async function mockSignUp(name: string, email: string, _password: string): Promi
     const now = new Date().toISOString();
     const newEmployee: Worker = {
         publicId: String(MOCK_WORKERS.length + 1),
-        role: "WAITER",
+        role: DEFAULT_WORKER_ROLE,
         salary: 0,
         isActive: true,
         profile: {
@@ -129,7 +84,7 @@ async function mockSignUp(name: string, email: string, _password: string): Promi
 }
 
 /**
- * Mock refresh token — returns a new mock access/refresh token.
+ * Mock refresh token - returns a new mock access/refresh token.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function mockRefreshToken(_refreshToken: string): Promise<RefreshTokenResponse> {
@@ -144,7 +99,7 @@ async function mockRefreshToken(_refreshToken: string): Promise<RefreshTokenResp
 }
 
 /**
- * Mock logout — clears server-side tokens (simulated).
+ * Mock logout - clears server-side tokens (simulated).
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function mockLogout(_refreshToken: string, _logoutAllDevices: boolean): Promise<LogoutResponse> {
@@ -157,35 +112,36 @@ async function mockLogout(_refreshToken: string, _logoutAllDevices: boolean): Pr
     };
 }
 
-function mapApiUserToWorker(user: ApiAuthUser): Worker {
-    const profileCreatedAt = user.profile.createdAt;
-    const profileUpdatedAt = user.profile.updatedAt ?? profileCreatedAt;
+function mapApiWorkerToWorker(data: GetWorkerResponse["data"]): Worker {
+    const profileCreatedAt = data.profile.createdAt;
+    const profileUpdatedAt = data.profile.updatedAt ?? profileCreatedAt;
+    const workerUpdatedAt = data.updatedAt ?? data.createdAt;
 
     return {
-        publicId: user.publicId,
-        role: "ADMIN",
-        salary: 0,
-        isActive: true,
+        publicId: data.publicId,
+        role: data.role,
+        salary: data.salary,
+        isActive: data.isActive,
         profile: {
-            fullName: user.profile.fullName,
-            phone: user.profile.phone ?? null,
-            avatarImage: user.profile.avatarImage ?? null,
-            email: user.email,
+            fullName: data.profile.fullName,
+            phone: data.profile.phone ?? null,
+            avatarImage: data.profile.avatarImage ?? null,
+            email: data.profile.email,
             createdAt: profileCreatedAt,
             updatedAt: profileUpdatedAt,
         },
-        createdAt: profileCreatedAt,
-        updatedAt: profileUpdatedAt,
+        createdAt: data.createdAt,
+        updatedAt: workerUpdatedAt,
     };
 }
 
-function mapRegisterToWorker(payload: ApiRegisterResponse): Worker {
+function mapRegisterToWorker(payload: RegisterResponse): Worker {
     const profileCreatedAt = payload.data.profile.createdAt;
-    const profileUpdatedAt = payload.data.updatedAt;
+    const profileUpdatedAt = payload.data.updatedAt ?? profileCreatedAt;
 
     return {
         publicId: payload.data.publicId,
-        role: "ADMIN",
+        role: DEFAULT_WORKER_ROLE,
         salary: 0,
         isActive: true,
         profile: {
@@ -201,12 +157,11 @@ function mapRegisterToWorker(payload: ApiRegisterResponse): Worker {
     };
 }
 
-
 /**
- * Real API login — calls POST /api/login.
+ * Real API login - calls POST /api/login.
  */
 async function apiLogin(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${URL_API}/login`, {
+    const response = await fetch(API.Auth.Login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -216,19 +171,42 @@ async function apiLogin(email: string, password: string): Promise<AuthResponse> 
         throw new Error("Email or password incorrect");
     }
 
-    const payload = (await response.json()) as ApiAuthResponse;
+    const payload = (await response.json()) as LoginResponse;
+    const worker = await apiGetWorker(payload.data.accessToken);
+
     return {
         token: payload.data.accessToken,
         refreshToken: payload.data.refreshToken,
-        user: mapApiUserToWorker(payload.data.user),
+        user: worker,
     };
 }
 
+async function apiGetWorker(accessToken?: string): Promise<Worker> {
+    const token = accessToken ?? getStoredToken();
+    if (!token) {
+        throw new Error("Access token missing");
+    }
+
+    const response = await fetch(API.Worker.GetMe, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Get worker failed");
+    }
+
+    const payload = (await response.json()) as GetWorkerResponse;
+    return mapApiWorkerToWorker(payload.data);
+}
+
 /**
- * Real API sign-up — calls POST /api/signup.
+ * Real API sign-up - calls POST /api/signup.
  */
 async function apiSignUp(name: string, email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${URL_API}/register`, {
+    const response = await fetch(API.Auth.Register, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -238,7 +216,7 @@ async function apiSignUp(name: string, email: string, password: string): Promise
         throw new Error("Sign up failed");
     }
 
-    const payload = (await response.json()) as ApiRegisterResponse;
+    const payload = (await response.json()) as RegisterResponse;
     return {
         token: null,
         user: mapRegisterToWorker(payload),
@@ -246,10 +224,10 @@ async function apiSignUp(name: string, email: string, password: string): Promise
 }
 
 /**
- * Real API refresh token — calls POST /api/auth/jwt/refresh-token.
+ * Real API refresh token - calls POST /api/auth/jwt/refresh-token.
  */
 async function apiRefreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    const response = await fetch(`${URL_API}/jwt/refresh-token`, {
+    const response = await fetch(API.Auth.RefreshToken, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),
@@ -263,10 +241,10 @@ async function apiRefreshToken(refreshToken: string): Promise<RefreshTokenRespon
 }
 
 /**
- * Real API logout — calls POST /api/auth/logout.
+ * Real API logout - calls POST /api/auth/logout.
  */
 async function apiLogout(refreshToken: string, logoutAllDevices: boolean): Promise<LogoutResponse> {
-    const response = await fetch(`${URL_API}/logout`, {
+    const response = await fetch(API.Auth.Logout, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken, logoutAllDevices }),
@@ -279,8 +257,7 @@ async function apiLogout(refreshToken: string, logoutAllDevices: boolean): Promi
     return response.json();
 }
 
-
-// ── Public API ──────────────────────────────────
+// -- Public API ----------------------------------
 
 export async function loginService(email: string, password: string): Promise<AuthResponse> {
     const data = USE_MOCK

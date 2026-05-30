@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getStoredUser } from '../services/authService';
+import { getStoredUser } from '../services/authService.ts';
 import { APP_ROUTES } from '../utils/Path';
 import { type JSX } from 'react';
 

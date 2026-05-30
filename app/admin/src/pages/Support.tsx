@@ -17,7 +17,7 @@ export function Support() {
 	const navigate = useNavigate();
 
 	return (
-		<div className="w-full h-fit gap-6 flex flex-col bg-(--Page-background) p-4">
+		<div className="w-full h-full gap-6 flex flex-col bg-(--Page-background) p-4">
 			<div className="flex flex-wrap items-center gap-4">
 				<div className="min-w-0 flex-1">
 					<DestakTitle title="Support" subtitle="Open a ticket and describe the issue" />

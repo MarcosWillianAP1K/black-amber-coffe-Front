@@ -8,18 +8,19 @@ import {
     getStoredUser,
     getStoredToken,
     getStoredRefreshToken,
-} from "../services/authService";
+} from "../services/authService.ts";
+import type { AuthResponse } from "../services/authService.ts";
 import type { Worker } from "shared-utils/types/worker";
 
-type AuthContextValue = {
+export type AuthContextValue = {
     user: Worker | null;
     token: string | null;
     refreshToken: string | null;
     loading: boolean;
     error: string | null;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<boolean>;
-    signUp: (name: string, email: string, password: string) => Promise<boolean>;
+    login: (email: string, password: string) => Promise<AuthResponse | null>;
+    signUp: (name: string, email: string, password: string) => Promise<AuthResponse | null>;
     refreshSession: () => Promise<void>;
     logout: (logoutAllDevices?: boolean) => Promise<void>;
     clearError: () => void;
@@ -71,10 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (data.refreshToken) {
                 setRefreshToken(data.refreshToken);
             }
-            return true;
+            return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Login failed");
-            return false;
+            return null;
         } finally {
             setLoading(false);
         }
@@ -90,10 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (data.refreshToken) {
                 setRefreshToken(data.refreshToken);
             }
-            return true;
+            return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "Sign up failed");
-            return false;
+            return null;
         } finally {
             setLoading(false);
         }
