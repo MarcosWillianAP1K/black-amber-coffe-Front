@@ -17,7 +17,8 @@
 
     /* O Segredo do Monorepo: Atalhos diretos! */
     "paths": {
-      "ui-shared/*": ["../../packages/ui-shared/*"]
+      "ui-shared/*": ["../../packages/ui-shared/*"],
+      "shared-utils/*": ["../../packages/utils/*"]
     },
 
     /* Linting */

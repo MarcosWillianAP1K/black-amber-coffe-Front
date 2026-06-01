@@ -6,12 +6,18 @@ import { APP_ROUTES } from "./utils/Path";
 // Importando o Layout Pai
 import { Template } from "./pages/Template";
 
+// Importando Contents
+import { Home } from "./pages/content/Home";
+
 // Importando as Telas Prontas
+import { Login } from "./pages/Login";
+// import { SignUp } from "./pages/SignUp";
+
 
 
 
 // Componente genérico para as telas não finalizadas
-// eslint-disable-next-line react-refresh/only-export-components
+// eslint-disable-next-line react-refresh/only-export-components, @typescript-eslint/no-unused-vars
 const EmConstrucao = () => (
     <div className="w-full h-full bg-(--Page-background) flex items-center justify-center">
         <h2 className="text-(--Text-primary-off) text-xl font-medium">
@@ -28,13 +34,21 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Navigate to={APP_ROUTES.NAME} replace />
+                element: <Navigate to={APP_ROUTES.LOGIN} replace />
             },
             {
-                path: APP_ROUTES.NAME,
-                element: <EmConstrucao />
+                path: APP_ROUTES.HOME,
+                element: <Home />
             }
         ]
     },
+    {
+        path: APP_ROUTES.LOGIN,
+        element: <Login />
+    },
+    // {
+    //     path: APP_ROUTES.SIGN_UP,
+    //     element: <SignUp />
+    // },
     
 ]);

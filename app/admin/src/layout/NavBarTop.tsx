@@ -1,17 +1,9 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { OptionConfig, type OptionConfigProps } from "ui-shared/components/OptionConfig";
-import { NotificationBell } from "ui-shared/components/NotificationBell";
+import { NotificationBell, type NotificationProps } from "ui-shared/components/NotificationBell";
+import { MOCK_NOTIFICATIONS } from "shared-utils/MockBD.js";
 import { APP_ROUTES } from "../utils/Path";
 import { useAuth } from "../hooks/useAuth";
-
-
-
-const notifications = [
-    { id: 1, message: "New order received", time: "2 mins ago", action: () => console.log("Notification 1 clicked") },
-    { id: 2, message: "Inventory low for Espresso Beans", time: "10 mins ago", action: () => console.log("Notification 2 clicked") },
-    { id: 3, message: "New staff member added", time: "1 hour ago", action: () => console.log("Notification 3 clicked") },
-];
 
 
 export function NavBarTop() {
@@ -25,16 +17,16 @@ export function NavBarTop() {
         ? APP_ROUTES.PERFIL_DETAIL.replace(":kind", "employee").replace(":id", user.publicId)
         : APP_ROUTES.PERFIL;
 
-    const options: OptionConfigProps[] = useMemo(() => [
-        {
-            label: "Profile",
-            action: () => navigate(profilePath),
-        },
-        {
-            label: "Settings",
-            action: () => navigate(APP_ROUTES.SETTINGS),
-        }
-    ], [navigate, profilePath]);
+    const notifications = useMemo<NotificationProps[]>(
+        () =>
+            MOCK_NOTIFICATIONS.map((notification) => ({
+                ...notification,
+                action: () => undefined,
+            })),
+        []
+    );
+
+
 
     return (
 
@@ -50,7 +42,6 @@ export function NavBarTop() {
 
                 <NotificationBell notifications={notifications} />
 
-                <OptionConfig options={options} />
 
                 <button
                     type="button"

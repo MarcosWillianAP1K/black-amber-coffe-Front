@@ -257,6 +257,18 @@ export const MOCK_ORDERS: Order[] = [
     },
 ];
 
+export interface MockNotification {
+    id: number;
+    message: string;
+    time: string;
+}
+
+export const MOCK_NOTIFICATIONS: MockNotification[] = [
+    { id: 1, message: "New order received", time: "2 mins ago" },
+    { id: 2, message: "Inventory low for Espresso Beans", time: "10 mins ago" },
+    { id: 3, message: "New staff member added", time: "1 hour ago" },
+];
+
 
 import type { User } from "./types/user";
 
