@@ -44,7 +44,7 @@ export function NavBarTop({
    
     return (
         <div className="w-full h-16 bg-(--Nav-bar-background) flex items-center justify-between px-4">
-            <h1 className="text-white text-2xl font-primary font-bold">Black Amber Coffee</h1>
+            <h1 className="text-(--Primary) text-2xl font-primary font-bold">Black Amber Coffee</h1>
 
             <div className="flex items-center gap-4">
                 <NotificationBell notifications={resolvedNotifications} />

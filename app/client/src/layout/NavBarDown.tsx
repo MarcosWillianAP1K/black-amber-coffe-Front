@@ -6,8 +6,8 @@ import { Home, Coffee, ShoppingCart, User } from "lucide-react";
 const navItems = [
     { label: "Home", icon: Home, path: APP_ROUTES.HOME },
     { label: "Menu", icon: Coffee, path: APP_ROUTES.MENU },
-    { label: "Orders", icon: ShoppingCart, path: APP_ROUTES.CART },
-    { label: "Profile", icon: User, path: APP_ROUTES.ACCOUNT },
+    { label: "Cart", icon: ShoppingCart, path: APP_ROUTES.CART },
+    { label: "Account", icon: User, path: APP_ROUTES.ACCOUNT },
 ];
 
 function NavItem({ label, icon: Icon, path }: { label: string; icon: ElementType; path: string }) {
@@ -23,7 +23,7 @@ function NavItem({ label, icon: Icon, path }: { label: string; icon: ElementType
             }
             aria-label={label}
         >
-            <Icon size={20} />
+            <Icon size={24} />
             <span className="text-xs font-primary">{label}</span>
         </NavLink>
     );
