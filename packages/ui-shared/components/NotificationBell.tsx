@@ -46,10 +46,10 @@ export function NotificationBell({ notifications = [] }: NotificationBellProps) 
                 className="relative p-1.5 rounded-md text-(--Text-primary-off) hover:text-(--Primary) hover:bg-(--Button-background) transition-all duration-200 cursor-pointer"
                 aria-label="Notifications"
             >
-                <Bell size={20} className="cursor-pointer text-(--Primary-off) hover:text-(--Primary-selected)" />
+                <Bell size={18} className="cursor-pointer text-(--Primary-off) hover:text-(--Primary-selected)" />
                 
                 {notifications.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-(--Primary) ring-2 ring-(--Page-background)" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-(--Primary) ring-2 ring-(--Page-background)" />
                 )}
             </button>
 

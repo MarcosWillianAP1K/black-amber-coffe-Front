@@ -23,15 +23,15 @@ function NavItem({ label, icon: Icon, path }: { label: string; icon: ElementType
             }
             aria-label={label}
         >
-            <Icon size={24} />
-            <span className="text-xs font-primary">{label}</span>
+            <Icon size={18} />
+            <span className="text-[10px] font-primary inline-flex ring-0 leading-none">{label}</span>
         </NavLink>
     );
 }
 
 export function NavBarDown() {
     return (
-        <nav className="w-full h-16 bg-(--Nav-bar-background) flex flex-row items-center justify-around px-4">
+        <nav className="w-full h-12 bg-(--Nav-bar-background) flex flex-row items-center justify-around p-4">
             {navItems.map((item) => (
                 <NavItem key={item.path} {...item} />
             ))}
