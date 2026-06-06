@@ -8,10 +8,10 @@ export function Template() {
     const { user, notifications, logout } = useAuth();
 
     return (
-        <div className="overflow-hidden w-full h-screen flex flex-col">
+        <div className="w-full h-screen flex flex-col">
             <NavBarTop user={user} notifications={notifications} onLogout={logout} />
 
-            <div className="flex-1 overflow-hidden bg-(--Page-background) p-6">
+            <div className="flex-1 overflow-y-auto bg-(--Page-background) p-6">
                 <Outlet />
             </div>
 

@@ -34,7 +34,7 @@ export function ProductCard({ name, itens, price, promotionPrice, imageUrl, onCl
 
             <div className="w-full h-full flex flex-col items-start gap-2">
 
-                <h2 className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[14px] font-bold text-white">{name}</h2>
+                <h2 className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-bold text-white">{name}</h2>
                 <p className="text-(--Primary-off) text-[8px] font-secondary overflow-hidden text-ellipsis line-clamp-2">{itens}</p>
                 
                 <div className="w-full h-fit flex flex-row items-center justify-between gap-0">
