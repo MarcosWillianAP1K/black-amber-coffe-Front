@@ -1,4 +1,4 @@
-import { CardProduct } from "../../components/CardProduct";
+import { ProductCard } from "../../components/ProductCard";
 
 
 export function Home() {
@@ -12,7 +12,7 @@ export function Home() {
 
             <div className="w-full h-fit gap-4 flex flex-wrap items-center justify-center">
 
-            <CardProduct
+            <ProductCard
                 name="Café Expresso"
                 itens="Grãos selecionados, torra média, sabor intenso e aroma marcante."
                 price={9.99}
@@ -21,7 +21,7 @@ export function Home() {
                 onClick={() => alert("Produto adicionado ao carrinho!")}
             />
 
-            <CardProduct
+            <ProductCard
                 name="Café Expresso"
                 itens="Grãos selecionados, torra média, sabor intenso e aroma marcante."
                 price={9.99}
@@ -30,7 +30,7 @@ export function Home() {
                 onClick={() => alert("Produto adicionado ao carrinho!")}
             />
 
-            <CardProduct
+            <ProductCard
                 name="Café Expresso"
                 itens="Grãos selecionados, torra média, sabor intenso e aroma marcante."
                 price={9.99}

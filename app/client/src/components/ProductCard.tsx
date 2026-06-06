@@ -1,6 +1,6 @@
 import { ButtonAddProduct } from "ui-shared/components/ui/ButtonAddProduct";
 
-export interface CardProductProps {
+export interface ProductCardProps {
     name: string;
     itens: string;
     price: number;
@@ -13,7 +13,7 @@ export interface CardProductProps {
 
 
 
-export function CardProduct({ name, itens, price, promotionPrice, imageUrl, onClick }: CardProductProps) {
+export function ProductCard({ name, itens, price, promotionPrice, imageUrl, onClick }: ProductCardProps) {
 
     return (
         <div className="w-36 h-fit p-4 bg-(--Widget-background) rounded-sm flex flex-col items-center justify-center gap-2 shadow-lg">
