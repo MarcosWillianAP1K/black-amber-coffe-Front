@@ -3,6 +3,7 @@ import { ProductCard } from "../../components/ProductCard";
 import { DestakCard } from "../../components/DestakCard";
 import { ProductCart } from "../../components/ProductCart";
 import { CategoryCarousel } from "ui-shared/components/CategoryCarousel";
+import { SummaryCart } from "../../components/SummaryCart";
 
 export function Home() {
 
@@ -75,6 +76,15 @@ export function Home() {
                 />
 
             </div>
+
+            <SummaryCart
+                itemsCount={2}
+                subTotal={13.50}
+                discount={5.00}
+                onCompletePurchase={() => alert('Comprado!')}
+            />
+
+
         </div >
     );
 
