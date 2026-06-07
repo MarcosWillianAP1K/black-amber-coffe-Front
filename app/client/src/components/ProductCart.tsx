@@ -1,4 +1,4 @@
-import { AddAndRemove } from "ui-shared/components/AddAndRemove";
+import { AddAndRemove } from "ui-shared/components/ui/AddAndRemove.js";
 
 
 

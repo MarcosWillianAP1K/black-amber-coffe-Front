@@ -14,7 +14,7 @@ export function AddAndRemove({ onAdd, quantity, onRemove }: AddAndRemoveProps) {
 
             <button
                 type="button"
-                className="w-fit h-fit px-2 py-1 inline-flex items-center justify-center rounded-sm bg-(--Negacion) text-(--Text-gray) font-primary font-[12px] focus:outline-none ring-0 leading-none"
+                className="cursor-pointer w-fit h-fit px-2 py-1 inline-flex items-center justify-center rounded-sm bg-(--Negacion) text-(--Text-gray) font-primary font-[12px] focus:outline-none ring-0 leading-none"
                 onClick={onRemove}
             >
                 -
@@ -24,7 +24,7 @@ export function AddAndRemove({ onAdd, quantity, onRemove }: AddAndRemoveProps) {
 
             <button
                 type="button"
-                className="w-fit h-fit px-2 py-1 inline-flex items-center justify-center rounded-sm bg-(--Button-background) text-(--Text-gray) font-primary font-[12px] focus:outline-none ring-0 leading-none"
+                className="cursor-pointer w-fit h-fit px-2 py-1 inline-flex items-center justify-center rounded-sm bg-(--Button-background) text-(--Text-gray) font-primary font-[12px] focus:outline-none ring-0 leading-none"
                 onClick={onAdd}
             >
                 +
