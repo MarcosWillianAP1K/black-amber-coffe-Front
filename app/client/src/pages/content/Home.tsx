@@ -1,12 +1,27 @@
+import { useState } from "react";
 import { ProductCard } from "../../components/ProductCard";
 import { DestakCard } from "../../components/DestakCard";
 import { ProductCart } from "../../components/ProductCart";
-
+import { CategoryCarousel } from "ui-shared/components/CategoryCarousel";
 
 export function Home() {
 
+    const categories = ["Cafés", "Chás", "Doces", "Salgados", "Bebidas"];
+
+    const [selectedCategory, setSelectedCategory] = useState("Cafés");
+
     return (
         <div className="w-full h-fit gap-4 flex flex-col items-center justify-center">
+
+            <div className="w-full">
+
+                <CategoryCarousel
+                    categories={categories}
+                    activeCategory={selectedCategory}
+                    onSelectCategory={setSelectedCategory}
+                />
+
+            </div>
 
             <DestakCard
                 title="Café Expresso"
@@ -53,7 +68,7 @@ export function Home() {
                 <ProductCart
                     name="Café Expresso"
                     price={9.99}
-                    imageUrl= "https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FmJTIwZXhwcmVzc298ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
+                    imageUrl="https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FmJTIwZXhwcmVzc298ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60"
                     quantity={2}
                     onAdd={() => alert("Produto adicionado ao carrinho!")}
                     onRemove={() => alert("Produto removido do carrinho!")}
