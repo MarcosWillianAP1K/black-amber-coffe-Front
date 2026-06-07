@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useDragScroll } from '../../utils/hooks/useDragScroll';
 
 interface CategoryCarouselProps {
   categories: string[];
@@ -7,41 +7,12 @@ interface CategoryCarouselProps {
 }
 
 export function CategoryCarousel({ categories, activeCategory, onSelectCategory }: CategoryCarouselProps) {
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!carouselRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - carouselRef.current.offsetLeft);
-    setScrollLeft(carouselRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !carouselRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // adjust scrolling speed
-    carouselRef.current.scrollLeft = scrollLeft - walk;
-  };
+  const { ref, isDragging, events } = useDragScroll<HTMLDivElement>();
 
   return (
     <div
-      ref={carouselRef}
-      onMouseDown={handleMouseDown}
-      onMouseLeave={handleMouseLeave}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
+      ref={ref}
+      {...events}
       style={{
         msOverflowStyle: 'none',
         scrollbarWidth: 'none'
