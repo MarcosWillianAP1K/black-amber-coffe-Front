@@ -1,23 +1,38 @@
 /**
  * Order Service — Data access layer for orders.
  *
- * Currently uses in-memory mock data.
- * Replace the implementations with real API calls when backend is ready.
- *
- * Each function is async to match the real API contract from day one.
+ * Integrated with backend /api/admin/orders, /api/worker/orders endpoints.
  */
 
-import type { Order, OrderStatus, AdminOrderListResponse } from "shared-utils/types/order";
+import type { Order, OrderStatus, AdminOrderListResponse, WorkerOrderResponse } from "shared-utils/types/order";
 import { MOCK_ORDERS } from "shared-utils/MockBD.js";
 import { API } from "shared-utils/core/APIroutes";
 import { authFetch } from "./httpClient.ts";
 
 // Mock toggle — set to false when API is ready
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // In-memory store (simulates server state)
 let orders = [...MOCK_ORDERS];
 let completedOrders: Order[] = [];
+
+// ──────────────────────────────────────────────
+// Types for API responses
+// ──────────────────────────────────────────────
+
+interface OrderCreatePayload {
+    items: Array<{
+        productId: number;
+        quantity: number;
+        observation?: string | null;
+    }>;
+    paymentMethod?: string;
+    observation?: string | null;
+}
+
+interface CreateOrderResponse {
+    data: Order;
+}
 
 // ──────────────────────────────────────────────
 // Service functions
@@ -41,37 +56,114 @@ export async function fetchOrders(): Promise<Order[]> {
     return payload.data;
 }
 
-/** Update the status of an order */
-export async function updateOrderStatus(id: number, newStatus: OrderStatus): Promise<Order> {
-    // TODO: return await fetch(`/api/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status: newStatus }) }).then(res => res.json());
-    const order = orders.find((o) => o.id === id);
-    if (!order) throw new Error(`Order ${id} not found`);
+/**
+ * Update the status of an order.
+ * Uses the worker PATCH endpoint: /api/worker/orders/:publicId/status
+ * For mock mode, looks up by numeric id; for API, uses publicId.
+ */
+export async function updateOrderStatus(publicId: string, newStatus: OrderStatus): Promise<Order> {
+    if (USE_MOCK) {
+        const order = orders.find((o) => o.publicId === publicId);
+        if (!order) throw new Error(`Order ${publicId} not found`);
 
-    const now = new Date().toISOString();
-    const updated = { ...order, status: newStatus, updatedAt: now };
-    orders = orders.map((o) => (o.id === id ? updated : o));
-    return updated;
+        const now = new Date().toISOString();
+        const updated = { ...order, status: newStatus, updatedAt: now };
+        orders = orders.map((o) => (o.publicId === publicId ? updated : o));
+        return updated;
+    }
+
+    const response = await authFetch(API.OrdersWorker.UpdateStatus(publicId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to update order status: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as WorkerOrderResponse;
+    return payload.data;
 }
 
-/** Delete an order */
-export async function deleteOrder(id: number): Promise<void> {
-    // TODO: await fetch(`/api/orders/${id}`, { method: "DELETE" });
-    orders = orders.filter((o) => o.id !== id);
+/**
+ * Create a new order.
+ * Uses the user POST endpoint: /api/user/orders
+ */
+export async function createOrder(data: OrderCreatePayload): Promise<Order> {
+    if (USE_MOCK) {
+        const id = Date.now();
+        const now = new Date().toISOString();
+        const newOrder: Order = {
+            id,
+            publicId: `ord-${id}`,
+            code: `PED-${now.slice(0, 10).replace(/-/g, "")}-${String(id).slice(-4)}`,
+            status: "PENDING",
+            totalPrice: 0,
+            paymentMethod: data.paymentMethod ?? null,
+            observation: data.observation ?? null,
+            itens: data.items.map((item, idx) => ({
+                id: idx,
+                name: `Product #${item.productId}`,
+                price: 0,
+                quantity: item.quantity,
+                observation: item.observation ?? null,
+            })),
+            createdAt: now,
+            updatedAt: now,
+        };
+        orders = [newOrder, ...orders];
+        return newOrder;
+    }
+
+    const response = await authFetch(API.OrdersUser.Create, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to create order: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as CreateOrderResponse;
+    return payload.data;
 }
 
-/** Create a new order */
-export async function createOrder(order: Order): Promise<Order> {
-    // TODO: return await fetch(`/api/orders`, { method: "POST", body: JSON.stringify(order) }).then(res => res.json());
-    orders = [order, ...orders];
-    return order;
+/** Move an order to completed list — delegates to updateOrderStatus when API is active */
+export async function completeOrder(publicId: string): Promise<Order> {
+    if (USE_MOCK) {
+        const order = orders.find((o) => o.publicId === publicId);
+        if (!order) throw new Error(`Order ${publicId} not found`);
+
+        orders = orders.filter((o) => o.publicId !== publicId);
+        completedOrders = [order, ...completedOrders];
+        return order;
+    }
+
+    return updateOrderStatus(publicId, "COMPLETED");
 }
 
-/** Move an order to completed list */
-export async function completeOrder(id: number): Promise<Order> {
-    const order = orders.find((o) => o.id === id);
-    if (!order) throw new Error(`Order ${id} not found`);
+/** Cancel an order (admin endpoint) */
+export async function cancelOrder(publicId: string): Promise<Order> {
+    if (USE_MOCK) {
+        const order = orders.find((o) => o.publicId === publicId);
+        if (!order) throw new Error(`Order ${publicId} not found`);
 
-    orders = orders.filter((o) => o.id !== id);
-    completedOrders = [order, ...completedOrders];
-    return order;
+        const now = new Date().toISOString();
+        const updated = { ...order, status: "CANCELLED" as OrderStatus, updatedAt: now };
+        orders = orders.map((o) => (o.publicId === publicId ? updated : o));
+        return updated;
+    }
+
+    const response = await authFetch(API.AdminOrders.CancelById(publicId), {
+        method: "POST",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to cancel order: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as WorkerOrderResponse;
+    return payload.data;
 }

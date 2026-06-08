@@ -19,7 +19,7 @@ export interface OrderItem {
     name: string;
     price: number;
     quantity: number;
-    observation: string;
+    observation: string | null;
 }
 
 /** Represents an order from the API */
@@ -29,8 +29,8 @@ export interface Order {
     code: string;
     status: OrderStatus;
     totalPrice: number;
-    paymentMethod: string;
-    observation: string;
+    paymentMethod: string | null;
+    observation: string | null;
     itens: OrderItem[];
     createdAt: string;
     updatedAt: string;

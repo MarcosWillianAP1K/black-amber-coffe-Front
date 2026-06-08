@@ -41,22 +41,30 @@ export function useMenuItems(): UseMenuItemsReturn {
     }, []);
 
     const handleEdit = useCallback(async (id: number, data: ProductInput) => {
-        const updated = await menuService.updateMenuItem(id, data);
+        // Find the product to get its publicId
+        const product = items.find((item) => item.id === id);
+        if (!product) throw new Error(`Product ${id} not found`);
+
+        const updated = await menuService.updateMenuItem(product.publicId, data);
         setItems((prev) => {
             const next = prev.map((item) => (item.id === id ? updated : item));
             localStorage.setItem("menuItems", JSON.stringify(next));
             return next;
         });
-    }, []);
+    }, [items]);
 
     const handleDelete = useCallback(async (id: number) => {
-        await menuService.deleteMenuItem(id);
+        // Find the product to get its publicId
+        const product = items.find((item) => item.id === id);
+        if (!product) return;
+
+        await menuService.deleteMenuItem(product.publicId);
         setItems((prev) => {
             const next = prev.filter((item) => item.id !== id);
             localStorage.setItem("menuItems", JSON.stringify(next));
             return next;
         });
-    }, []);
+    }, [items]);
 
     const handleCreate = useCallback(async (data: ProductInput) => {
         const newItem = await menuService.createMenuItem(data);

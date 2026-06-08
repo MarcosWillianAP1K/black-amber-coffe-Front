@@ -1,7 +1,5 @@
 import type { Worker, GetWorkerResponse } from "shared-utils/types/worker";
 import type {
-    LoginResponse,
-    RegisterResponse,
     RefreshTokenResponse,
     LogoutResponse,
 } from "shared-utils/types/auth";
@@ -135,22 +133,36 @@ function mapApiWorkerToWorker(data: GetWorkerResponse["data"]): Worker {
     };
 }
 
-function mapRegisterToWorker(payload: RegisterResponse): Worker {
-    const profileCreatedAt = payload.data.profile.createdAt;
-    const profileUpdatedAt = payload.data.updatedAt ?? profileCreatedAt;
-
+function mapRegisteredWorkerToWorker(payload: {
+    data: {
+        publicId: string;
+        email: string;
+        role: string;
+        salary: number;
+        createdAt: string;
+        updatedAt: string;
+        profile: {
+            fullName: string;
+            phone: string | null;
+            avatarImage: string | null;
+            email: string;
+            createdAt: string;
+            updatedAt: string;
+        };
+    };
+}): Worker {
     return {
         publicId: payload.data.publicId,
-        role: DEFAULT_WORKER_ROLE,
-        salary: 0,
+        role: payload.data.role as Worker["role"],
+        salary: payload.data.salary,
         isActive: true,
         profile: {
             fullName: payload.data.profile.fullName,
             phone: payload.data.profile.phone ?? null,
             avatarImage: payload.data.profile.avatarImage ?? null,
-            email: payload.data.email,
-            createdAt: profileCreatedAt,
-            updatedAt: profileUpdatedAt,
+            email: payload.data.profile.email,
+            createdAt: payload.data.profile.createdAt,
+            updatedAt: payload.data.profile.updatedAt,
         },
         createdAt: payload.data.createdAt,
         updatedAt: payload.data.updatedAt,
@@ -158,10 +170,11 @@ function mapRegisterToWorker(payload: RegisterResponse): Worker {
 }
 
 /**
- * Real API login - calls POST /api/login.
+ * Real API login - calls POST /worker/login (worker-specific endpoint).
+ * Then fetches full worker profile via /worker/get/me.
  */
 async function apiLogin(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(API.Auth.Login, {
+    const response = await fetch(API.Workers.Login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -171,7 +184,9 @@ async function apiLogin(email: string, password: string): Promise<AuthResponse> 
         throw new Error("Email or password incorrect");
     }
 
-    const payload = (await response.json()) as LoginResponse;
+    const payload = await response.json() as { data: { accessToken: string; refreshToken: string } };
+
+    // Fetch full worker profile with salary, isActive etc.
     const worker = await apiGetWorker(payload.data.accessToken);
 
     return {
@@ -203,23 +218,38 @@ async function apiGetWorker(accessToken?: string): Promise<Worker> {
 }
 
 /**
- * Real API sign-up - calls POST /api/signup.
+ * Real API sign-up - calls POST /admin/workers (worker registration).
+ * Note: requires admin authentication. Workers cannot self-register.
  */
 async function apiSignUp(name: string, email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(API.Auth.Register, {
+    const token = getStoredToken();
+
+    const response = await fetch(API.AdminWorkers.Register, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+            fullName: name,
+            email,
+            password,
+            role: DEFAULT_WORKER_ROLE,
+            salary: 0,
+        }),
     });
 
     if (!response.ok) {
-        throw new Error("Sign up failed");
+        if (response.status === 401) {
+            throw new Error("Only admins can create workers. Please login as admin first.");
+        }
+        throw new Error("Failed to create worker account");
     }
 
-    const payload = (await response.json()) as RegisterResponse;
+    const payload = await response.json();
     return {
         token: null,
-        user: mapRegisterToWorker(payload),
+        user: mapRegisteredWorkerToWorker(payload),
     };
 }
 

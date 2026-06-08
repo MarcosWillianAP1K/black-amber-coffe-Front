@@ -43,7 +43,7 @@ export function Login() {
 
                 </form>
 
-                <LinkTextLogin text1="Don't have an account?" text2="Sign Up" path={APP_ROUTES.SIGNUP} />
+                <LinkTextLogin text1="New employee?" text2="Contact your admin" path={APP_ROUTES.SIGNUP} />
             </div>
         </div>
     )

@@ -52,8 +52,13 @@ export function useOrders(): UseOrdersReturn {
     }, []);
 
     const handleAction = useCallback(async (orderId: number, action: string) => {
+        // Find the order to get its publicId
+        const order = orders.find((o) => o.id === orderId);
+        if (!order) return;
+        const publicId = order.publicId;
+
         if (action === "complete") {
-            const completed = await orderService.completeOrder(orderId);
+            const completed = await orderService.completeOrder(publicId);
             setOrders((prev) => {
                 const next = prev.filter((o) => o.id !== orderId);
                 localStorage.setItem("orders", JSON.stringify(next));
@@ -67,7 +72,7 @@ export function useOrders(): UseOrdersReturn {
         }
 
         if (action === "delete") {
-            await orderService.deleteOrder(orderId);
+            await orderService.cancelOrder(publicId);
             setOrders((prev) => {
                 const next = prev.filter((o) => o.id !== orderId);
                 localStorage.setItem("orders", JSON.stringify(next));
@@ -79,37 +84,25 @@ export function useOrders(): UseOrdersReturn {
         const newStatus = ACTION_STATUS_MAP[action];
         if (!newStatus) return;
 
-        const updated = await orderService.updateOrderStatus(orderId, newStatus);
+        const updated = await orderService.updateOrderStatus(publicId, newStatus);
         setOrders((prev) => {
             const next = prev.map((o) => (o.id === orderId ? updated : o));
             localStorage.setItem("orders", JSON.stringify(next));
             return next;
         });
-    }, []);
+    }, [orders]);
 
     const addOrder = useCallback(async (data: NewOrderData) => {
-        const id = Date.now();
-        const now = new Date().toISOString();
-        const newOrder: Order = {
-            id,
-            publicId: `ord-${id}`,
-            code: `PED-${now.slice(0, 10).replace(/-/g, "")}-${String(id).slice(-4)}`,
-            status: "PENDING",
-            totalPrice: data.totalPrice,
-            paymentMethod: "CASH",
-            observation: data.observation ?? "",
-            itens: data.itens?.map((item, idx) => ({
-                id: idx,
-                name: item.name ?? `Product #${item.productId}`,
-                price: item.unitPrice,
+        const created = await orderService.createOrder({
+            items: data.itens?.map((item) => ({
+                productId: item.productId,
                 quantity: item.quantity,
-                observation: "",
+                observation: null,
             })) ?? [],
-            createdAt: now,
-            updatedAt: now,
-        };
+            paymentMethod: "CASH",
+            observation: data.observation ?? null,
+        });
 
-        const created = await orderService.createOrder(newOrder);
         setOrders((prev) => {
             const next = [created, ...prev];
             localStorage.setItem("orders", JSON.stringify(next));
