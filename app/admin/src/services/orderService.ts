@@ -7,10 +7,13 @@
  * Each function is async to match the real API contract from day one.
  */
 
-import type { Order, OrderStatus } from "shared-utils/types/order";
+import type { Order, OrderStatus, AdminOrderListResponse } from "shared-utils/types/order";
 import { MOCK_ORDERS } from "shared-utils/MockBD.js";
+import { API } from "shared-utils/core/APIroutes";
+import { authFetch } from "./httpClient.ts";
 
-
+// Mock toggle — set to false when API is ready
+const USE_MOCK = true;
 
 // In-memory store (simulates server state)
 let orders = [...MOCK_ORDERS];
@@ -20,10 +23,22 @@ let completedOrders: Order[] = [];
 // Service functions
 // ──────────────────────────────────────────────
 
-/** Fetch all orders */
+/** Fetch all orders — calls API or returns mock data */
 export async function fetchOrders(): Promise<Order[]> {
-    // TODO: return await fetch("/api/orders").then(res => res.json());
-    return [...orders];
+    if (USE_MOCK) {
+        return [...orders];
+    }
+
+    const response = await authFetch(API.AdminOrders.List, {
+        method: "GET",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as AdminOrderListResponse;
+    return payload.data;
 }
 
 /** Update the status of an order */

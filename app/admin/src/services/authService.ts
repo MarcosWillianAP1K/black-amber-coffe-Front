@@ -187,7 +187,7 @@ async function apiGetWorker(accessToken?: string): Promise<Worker> {
         throw new Error("Access token missing");
     }
 
-    const response = await fetch(API.Worker.GetMe, {
+    const response = await fetch(API.Workers.GetMe, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,

@@ -170,7 +170,7 @@ export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = 
                         Description
                     </label>
                     <textarea
-                        value={formData.description}
+                        value={formData.description ?? ""}
                         onChange={(e) => handleChange("description", e.target.value)}
                         placeholder="Enter item description"
                         rows={3}

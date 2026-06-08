@@ -21,8 +21,8 @@ const COMPLETED_STORAGE_KEY = "completedOrders";
 /** Minimal data needed from the form to create a new order */
 export interface NewOrderData {
     observation?: string | null;
-    totalAmount: number;
-    items?: Array<{ productId: number; quantity: number; unitPrice: number }>;
+    totalPrice: number;
+    itens?: Array<{ productId: number; quantity: number; unitPrice: number; name?: string }>;
 }
 
 interface UseOrdersReturn {
@@ -39,9 +39,6 @@ export function useOrders(): UseOrdersReturn {
     // Initial fetch
     useEffect(() => {
         let cancelled = false;
-
-        localStorage.removeItem("orders");
-        localStorage.removeItem(COMPLETED_STORAGE_KEY);
 
         orderService.fetchOrders().then((data) => {
             if (!cancelled) {
@@ -96,21 +93,20 @@ export function useOrders(): UseOrdersReturn {
         const newOrder: Order = {
             id,
             publicId: `ord-${id}`,
-            clientId: 0,
-            totalAmount: data.totalAmount,
+            code: `PED-${now.slice(0, 10).replace(/-/g, "")}-${String(id).slice(-4)}`,
             status: "PENDING",
-            observation: data.observation ?? null,
+            totalPrice: data.totalPrice,
+            paymentMethod: "CASH",
+            observation: data.observation ?? "",
+            itens: data.itens?.map((item, idx) => ({
+                id: idx,
+                name: item.name ?? `Product #${item.productId}`,
+                price: item.unitPrice,
+                quantity: item.quantity,
+                observation: "",
+            })) ?? [],
             createdAt: now,
             updatedAt: now,
-            items: data.items?.map((item, idx) => ({
-                id: idx,
-                orderId: id,
-                productId: item.productId,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                createdAt: now,
-                updatedAt: now,
-            })),
         };
 
         const created = await orderService.createOrder(newOrder);

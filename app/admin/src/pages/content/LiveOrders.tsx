@@ -36,7 +36,7 @@ export function LiveOrders() {
         }
 
         if (sortType === "value") {
-            next.sort((a, b) => b.totalAmount - a.totalAmount);
+            next.sort((a, b) => b.totalPrice - a.totalPrice);
             return next;
         }
 

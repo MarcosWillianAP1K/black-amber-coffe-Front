@@ -33,8 +33,8 @@ export function OverlayOrder({ onSave }: OverlayOrderProps) {
     const handleSave = (data: FormOrderData) => {
         onSave({
             observation: data.observation,
-            totalAmount: data.totalAmount,
-            items: data.items,
+            totalPrice: data.totalPrice,
+            itens: data.items,
         });
     };
 

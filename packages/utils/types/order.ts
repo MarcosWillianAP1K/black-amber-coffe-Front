@@ -13,37 +13,35 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-/** Represents a single item within an order */
+/** Represents a single item within an order (API shape from OrdersWorker) */
 export interface OrderItem {
     id: number;
-    orderId: number;
-    productId: number;
+    name: string;
+    price: number;
     quantity: number;
-    unitPrice: number;
-    createdAt: string;
-    updatedAt: string;
+    observation: string;
 }
 
-/** Represents the payment attached to an order */
-export interface Payment {
-    id: number;
-    orderId: number;
-    amount: number;
-    method: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-/** Represents a customer order */
+/** Represents an order from the API */
 export interface Order {
     id: number;
     publicId: string;
-    clientId: number;
-    totalAmount: number;
+    code: string;
     status: OrderStatus;
-    observation: string | null;
+    totalPrice: number;
+    paymentMethod: string;
+    observation: string;
+    itens: OrderItem[];
     createdAt: string;
     updatedAt: string;
-    items?: OrderItem[];
-    payment?: Payment | null;
+}
+
+/** API response wrapper for admin orders list */
+export interface AdminOrderListResponse {
+    data: Order[];
+}
+
+/** API response wrapper for worker order detail */
+export interface WorkerOrderResponse {
+    data: Order;
 }

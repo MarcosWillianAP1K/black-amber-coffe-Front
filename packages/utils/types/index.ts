@@ -4,7 +4,7 @@
 export type { Product, ProductInput, ProductCategory } from "./product";
 export { PRODUCT_CATEGORIES } from "./product";
 
-export type { Order, OrderStatus, OrderItem, Payment } from "./order";
+export type { Order, OrderStatus, OrderItem, AdminOrderListResponse, WorkerOrderResponse } from "./order";
 export { ORDER_STATUSES } from "./order";
 
 export type {

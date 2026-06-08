@@ -43,11 +43,11 @@ export function CardOrder({ order, onAction }: CardOrderProps) {
                 </div>
 
                 {/* List items */}
-                {order.items && order.items.length > 0 && (
+                {order.itens && order.itens.length > 0 && (
                     <div className="w-full gap-2">
-                        {order.items.map((item) => (
+                        {order.itens.map((item) => (
                             <div key={item.id} className="flex justify-between">
-                                <p className="text-(--Text-gray) text-[14px]">Product #{item.productId}</p>
+                                <p className="text-(--Text-gray) text-[14px]">{item.name}</p>
                                 <p className="text-(--Text-gray) text-[14px]">x{item.quantity}</p>
                             </div>
                         ))}
@@ -64,7 +64,7 @@ export function CardOrder({ order, onAction }: CardOrderProps) {
             {/* Total and button */}
             <div className="w-full flex justify-between items-center">
                 <p className="text-(--Primary) text-[16px] font-bold w-full">
-                    {formatPrice(order.totalAmount)}
+                    {formatPrice(order.totalPrice)}
                 </p>
                 <ButtonOrder status={order.status} onAction={handleAction} />
             </div>

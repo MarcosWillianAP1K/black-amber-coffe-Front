@@ -26,15 +26,6 @@ import { Support } from "./pages/Support";
 import { logoutService, getStoredToken } from "./services/authService.ts";
 
 // Componente genérico para as telas não finalizadas
-// eslint-disable-next-line react-refresh/only-export-components, @typescript-eslint/no-unused-vars
-const EmConstrucao = () => (
-    <div className="w-full h-full bg-(--Page-background) flex items-center justify-center">
-        <h2 className="text-(--Text-primary-off) text-xl font-medium">
-            Tela em construção...
-        </h2>
-    </div>
-);
-
 // eslint-disable-next-line react-refresh/only-export-components
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
     const token = getStoredToken();

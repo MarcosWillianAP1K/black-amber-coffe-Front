@@ -5,7 +5,7 @@ import { MOCK_PRODUCTS } from "shared-utils/MockBD.js";
 /** Simplified form data for creating a new order via the overlay form */
 export interface FormOrderData {
     observation: string;
-    totalAmount: number;
+    totalPrice: number;
     items: Array<{ productId: number; quantity: number; unitPrice: number }>;
 }
 
@@ -99,7 +99,7 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
 
         onSave({
             observation: form.observation,
-            totalAmount: total,
+            totalPrice: total,
             items: orderItems,
         });
 
