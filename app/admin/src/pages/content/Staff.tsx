@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { DestakTitle } from "ui-shared/components/ui/DestakTitle";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SectionCustomers } from "../../components/SectionCustomers";
 import { SectionEmployee } from "../../components/SectionEmployee";
 import { ErrorState } from "../../components/ui/ErrorState";
+import { RegisterWorkerOverlay } from "../../components/RegisterWorkerOverlay";
+import { RegisterClientOverlay } from "../../components/RegisterClientOverlay";
 import { useCustomers } from "../../hooks/useCustomers";
 import { useEmployee } from "../../hooks/useEmployee";
 import { APP_ROUTES } from "../../utils/Path";
@@ -15,6 +19,8 @@ export function Staff() {
     const navigate = useNavigate();
     const { customers, deleteCustomer, isLoading: customersLoading } = useCustomers();
     const { employees, deleteEmployee, toggleEmployeeStatus, isLoading: employeesLoading, error: employeesError, refresh: refreshEmployees } = useEmployee();
+    const [showRegisterWorker, setShowRegisterWorker] = useState(false);
+    const [showRegisterClient, setShowRegisterClient] = useState(false);
     const activeEmployees = employees.filter((employee) => employee.isActive);
 
     const buildProfilePath = (kind: "customer" | "employee", id: string) =>
@@ -64,30 +70,70 @@ export function Staff() {
         <div className="w-full h-fit gap-6 flex flex-col">
             <DestakTitle title="Staff" subtitle="Manage your team and staff members" />
 
-            <SectionEmployee
-                employees={activeEmployees}
-                title="Working Now"
-                onDeleteEmployee={deleteEmployee}
-                onBlockEmployee={toggleEmployeeStatus}
-                onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
-            />
+            {/* Registration buttons */}
+            <div className="flex flex-wrap items-center justify-end gap-3">
+                <button
+                    onClick={() => setShowRegisterWorker(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-(--Primary) text-(--Text-dark) font-bold text-sm rounded-md hover:bg-(--Primary-selected) transition-all uppercase tracking-wide"
+                >
+                    <Plus size={16} />
+                    Register Worker
+                </button>
+                <button
+                    onClick={() => setShowRegisterClient(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-(--Button-background) text-(--Text-gray) font-secondary font-semibold text-sm rounded-md hover:border-(--Primary) hover:text-(--Primary) transition-all border border-(--Border)"
+                >
+                    <Plus size={16} />
+                    Register Client
+                </button>
+            </div>
 
-            <SectionEmployee
-                employees={employees}
-                title="Staff"
-                onDeleteEmployee={deleteEmployee}
-                onBlockEmployee={toggleEmployeeStatus}
-                onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
-            />
+            {/* Main content + Overlay panels */}
+            <div className="flex gap-6">
+                <div className="flex-1 flex flex-col gap-6 min-w-0">
+                    <SectionEmployee
+                        employees={activeEmployees}
+                        title="Working Now"
+                        onDeleteEmployee={deleteEmployee}
+                        onBlockEmployee={toggleEmployeeStatus}
+                        onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
+                    />
 
+                    <SectionEmployee
+                        employees={employees}
+                        title="Staff"
+                        onDeleteEmployee={deleteEmployee}
+                        onBlockEmployee={toggleEmployeeStatus}
+                        onViewEmployee={(publicId) => navigate(buildProfilePath("employee", publicId), { state: { from: "staff" } })}
+                    />
 
-            <SectionCustomers
-                customers={customers}
-                title="Customers"
-                onDeleteCustomer={deleteCustomer}
-                onBlockCustomer={(publicId) => console.log("Block customer:", publicId)}
-                onViewCustomer={(publicId) => navigate(buildProfilePath("customer", publicId), { state: { from: "staff" } })}
-            />
+                    <SectionCustomers
+                        customers={customers}
+                        title="Customers"
+                        onDeleteCustomer={deleteCustomer}
+                        onBlockCustomer={(publicId) => console.log("Block customer:", publicId)}
+                        onViewCustomer={(publicId) => navigate(buildProfilePath("customer", publicId), { state: { from: "staff" } })}
+                    />
+                </div>
+
+                {/* Worker registration overlay */}
+                {showRegisterWorker && (
+                    <RegisterWorkerOverlay
+                        onClose={() => setShowRegisterWorker(false)}
+                        onSuccess={() => {
+                            setShowRegisterWorker(false);
+                            refreshEmployees();
+                        }}
+                    />
+                )}
+
+                {/* Client registration overlay */}
+                {showRegisterClient && (
+                    <RegisterClientOverlay
+                        onClose={() => setShowRegisterClient(false)}
+                    />
+                )}
+            </div>
         </div>
     );
 }
