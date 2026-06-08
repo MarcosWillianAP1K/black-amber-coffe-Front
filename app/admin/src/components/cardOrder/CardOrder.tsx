@@ -2,6 +2,7 @@
  * CardOrder — Displays a single order card with order info, observation, and actions.
  */
 
+import { useState } from "react";
 import type { Order } from "shared-utils/types/order";
 import { formatPrice } from "shared-utils/helpers/currency";
 import { StatusBadge } from "ui-shared/components/ui/StatusBadge";
@@ -19,12 +20,19 @@ const ORDER_STATUS_COLORS: StatusColorMap = {
 
 interface CardOrderProps {
     order: Order;
-    onAction?: (orderId: number, action: string) => void;
+    onAction?: (orderId: number, action: string) => Promise<void>;
 }
 
 export function CardOrder({ order, onAction }: CardOrderProps) {
-    const handleAction = (action: string) => {
-        onAction?.(order.id, action);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleAction = async (action: string) => {
+        setIsProcessing(true);
+        try {
+            await onAction?.(order.id, action);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -66,7 +74,7 @@ export function CardOrder({ order, onAction }: CardOrderProps) {
                 <p className="text-(--Primary) text-[16px] font-bold w-full">
                     {formatPrice(order.totalPrice)}
                 </p>
-                <ButtonOrder status={order.status} onAction={handleAction} />
+                <ButtonOrder status={order.status} onAction={handleAction} disabled={isProcessing} />
             </div>
         </div>
     );

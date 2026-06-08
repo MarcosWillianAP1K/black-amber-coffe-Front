@@ -21,7 +21,7 @@ import * as menuService from "../services/menuService";
 // Constants
 // ──────────────────────────────────────────────
 
-const POLL_INTERVAL_MS = 30_000; // 30 seconds
+const POLL_INTERVAL_MS = 35_000; // 35 seconds — staggered from OrderContext (30s)
 
 // ──────────────────────────────────────────────
 // Types
@@ -30,6 +30,7 @@ const POLL_INTERVAL_MS = 30_000; // 30 seconds
 interface MenuContextValue {
     items: Product[];
     isLoading: boolean;
+    error: string | null;
     refresh: () => Promise<void>;
     handlers: {
         onCreate: (data: ProductInput) => Promise<void>;
@@ -51,34 +52,39 @@ const MenuContext = createContext<MenuContextValue | undefined>(undefined);
 export function MenuProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
 
     // ── Fetch items ──────────────────────────
 
     const refresh = useCallback(async () => {
+        setError(null);
         try {
             const data = await menuService.fetchMenuItems();
             setItems(data);
             localStorage.setItem("menuItems", JSON.stringify(data));
-        } catch {
-            // Silently fail — next poll will retry
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to load menu";
+            setError(message);
         } finally {
             setIsLoading(false);
         }
     }, []);
 
     // ── Initial fetch + polling ──────────────
+    // Staggered 3s after mount to spread out requests
 
     useEffect(() => {
         if (mountedRef.current) return;
         mountedRef.current = true;
 
-        refresh();
+        const initialTimer = setTimeout(refresh, 3_000);
 
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
 
         return () => {
+            clearTimeout(initialTimer);
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
                 pollingRef.current = null;
@@ -155,6 +161,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
             value={{
                 items,
                 isLoading,
+                error,
                 refresh,
                 handlers: {
                     onCreate,

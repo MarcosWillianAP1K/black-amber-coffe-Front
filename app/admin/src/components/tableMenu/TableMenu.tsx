@@ -74,11 +74,11 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
     }, []);
 
     const handlePanelSave = useCallback(
-        (data: ProductInput) => {
+        async (data: ProductInput) => {
             if (panelState.mode === "edit") {
-                handlers.onEdit(panelState.item.id, data);
+                await handlers.onEdit(panelState.item.id, data);
             } else if (panelState.mode === "create") {
-                handlers.onCreate(data);
+                await handlers.onCreate(data);
             }
             setPanelState({ mode: "closed" });
         },

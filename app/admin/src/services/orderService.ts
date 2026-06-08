@@ -14,7 +14,6 @@ const USE_MOCK = false;
 
 // In-memory store (simulates server state)
 let orders = [...MOCK_ORDERS];
-let completedOrders: Order[] = [];
 
 // ──────────────────────────────────────────────
 // Service functions
@@ -110,7 +109,6 @@ export async function completeOrder(publicId: string): Promise<Order> {
         if (!order) throw new Error(`Order ${publicId} not found`);
 
         orders = orders.filter((o) => o.publicId !== publicId);
-        completedOrders = [order, ...completedOrders];
         return order;
     }
 

@@ -4,6 +4,7 @@
  * Uses OptionsEllipsis for the dropdown menu with dynamic actions.
  */
 
+import { useState } from "react";
 import { PerfilCard } from "ui-shared/components/ui/PerfilCard";
 import { CompTime } from "ui-shared/components/CompTIme";
 import { OptionsEllipsis } from "ui-shared/components/OptionElipisses";
@@ -17,6 +18,17 @@ export interface CardEmployeeProps extends Worker {
 }
 
 export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmployee, onBlockEmployee, onViewEmployee }: CardEmployeeProps) {
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleAction = async (action: () => void) => {
+        setIsProcessing(true);
+        try {
+            await action();
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <div className="w-90 h-fit p-4 bg-(--Widget-background) rounded-md border border-(--Border) flex flex-col gap-6">
 
@@ -30,10 +42,11 @@ export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmploy
                 />
 
                 <OptionsEllipsis
+                    disabled={isProcessing}
                     options={[
-                        { label: "View Profile", action: () => onViewEmployee(publicId) },
-                        { label: "Block Employee", action: () => onBlockEmployee(publicId) },
-                        { label: "Delete", action: () => onDeleteEmployee(publicId), danger: true },
+                        { label: "View Profile", action: () => handleAction(() => onViewEmployee(publicId)) },
+                        { label: "Block Employee", action: () => handleAction(() => onBlockEmployee(publicId)) },
+                        { label: "Delete", action: () => handleAction(() => onDeleteEmployee(publicId)), danger: true },
                     ]}
                 />
             </div>

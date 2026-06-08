@@ -20,9 +20,10 @@ export interface EllipsisOption {
 
 interface OptionsEllipsisProps {
     options: EllipsisOption[];
+    disabled?: boolean;
 }
 
-export function OptionsEllipsis({ options }: OptionsEllipsisProps) {
+export function OptionsEllipsis({ options, disabled }: OptionsEllipsisProps) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +46,8 @@ export function OptionsEllipsis({ options }: OptionsEllipsisProps) {
             {/* Trigger Button */}
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="p-1.5 rounded-md text-(--Text-primary-off) hover:text-(--Primary) hover:bg-(--Button-background) transition-all duration-200 cursor-pointer"
+                disabled={disabled}
+                className={`p-1.5 rounded-md text-(--Text-primary-off) transition-all duration-200 ${disabled ? "opacity-30 cursor-not-allowed" : "hover:text-(--Primary) hover:bg-(--Button-background) cursor-pointer"}`}
                 aria-label="More options"
             >
                 <Ellipsis size={20} />

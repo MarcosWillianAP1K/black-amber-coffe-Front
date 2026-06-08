@@ -20,7 +20,7 @@ import * as employeeService from "../services/employeeService";
 // Constants
 // ──────────────────────────────────────────────
 
-const POLL_INTERVAL_MS = 30_000; // 30 seconds
+const POLL_INTERVAL_MS = 40_000; // 40 seconds — staggered from OrderContext (30s) and MenuContext (35s)
 
 // ──────────────────────────────────────────────
 // Types
@@ -29,6 +29,7 @@ const POLL_INTERVAL_MS = 30_000; // 30 seconds
 interface EmployeeContextValue {
     employees: Worker[];
     isLoading: boolean;
+    error: string | null;
     refresh: () => Promise<void>;
     deleteEmployee: (publicId: string) => Promise<void>;
     toggleEmployeeStatus: (publicId: string) => Promise<void>;
@@ -48,34 +49,39 @@ const EmployeeContext = createContext<EmployeeContextValue | undefined>(undefine
 export function EmployeeProvider({ children }: { children: ReactNode }) {
     const [employees, setEmployees] = useState<Worker[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
 
     // ── Fetch employees ──────────────────────
 
     const refresh = useCallback(async () => {
+        setError(null);
         try {
             const data = await employeeService.fetchEmployees();
             setEmployees(data);
             localStorage.setItem("employees", JSON.stringify(data));
-        } catch {
-            // Silently fail — next poll will retry
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to load employees";
+            setError(message);
         } finally {
             setIsLoading(false);
         }
     }, []);
 
     // ── Initial fetch + polling ──────────────
+    // Staggered 6s after mount to spread out requests
 
     useEffect(() => {
         if (mountedRef.current) return;
         mountedRef.current = true;
 
-        refresh();
+        const initialTimer = setTimeout(refresh, 6_000);
 
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
 
         return () => {
+            clearTimeout(initialTimer);
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
                 pollingRef.current = null;
@@ -132,6 +138,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
             value={{
                 employees,
                 isLoading,
+                error,
                 refresh,
                 deleteEmployee,
                 toggleEmployeeStatus,

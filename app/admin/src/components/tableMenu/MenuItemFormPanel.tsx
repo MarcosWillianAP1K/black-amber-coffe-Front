@@ -17,7 +17,7 @@ interface MenuItemFormPanelProps {
     /** The item to edit. If null, the panel operates in "create" mode. */
     editingItem: Product | null;
     /** Called when the user saves (create or edit). */
-    onSave: (data: ProductInput) => void;
+    onSave: (data: ProductInput) => Promise<void> | void;
     /** Called when the user cancels / closes the panel. */
     onCancel: () => void;
     /** Optional list of categories to override the defaults */
@@ -54,6 +54,7 @@ export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = 
 
     const [formData, setFormData] = useState<ProductInput>(initialFormData);
     const [imagePreview, setImagePreview] = useState<string>(editingItem?.imageUrl ?? "");
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleChange = (
         field: keyof ProductInput,
@@ -81,9 +82,14 @@ export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = 
         setFormData((prev) => ({ ...prev, imageFile: file, imageUrl: previewUrl }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        setIsSaving(true);
+        try {
+            await onSave(formData);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -95,7 +101,8 @@ export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = 
                 </h3>
                 <button
                     onClick={onCancel}
-                    className="p-1 rounded-md text-(--Text-primary-off) hover:text-(--Text-gray) hover:bg-(--Button-background) transition-colors"
+                    disabled={isSaving}
+                    className={`p-1 rounded-md text-(--Text-primary-off) transition-colors ${isSaving ? "opacity-30 cursor-not-allowed" : "hover:text-(--Text-gray) hover:bg-(--Button-background)"}`}
                     aria-label="Close panel"
                 >
                     <X size={18} />
@@ -224,13 +231,15 @@ export function MenuItemFormPanel({ editingItem, onSave, onCancel, categories = 
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 px-4 py-2.5 bg-(--Button-background) text-(--Text-gray) font-primary font-bold text-sm rounded-md hover:bg-(--Select-background) transition-colors uppercase tracking-wide"
+                        disabled={isSaving}
+                        className={`flex-1 px-4 py-2.5 bg-(--Button-background) text-(--Text-gray) font-primary font-bold text-sm rounded-md transition-colors uppercase tracking-wide ${isSaving ? "opacity-50 cursor-not-allowed" : "hover:bg-(--Select-background) cursor-pointer"}`}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className="flex-1 px-4 py-2.5 bg-(--Primary) text-(--Text-dark) font-primary font-bold text-sm rounded-md hover:bg-(--Primary-selected) transition-colors uppercase tracking-wide"
+                        disabled={isSaving}
+                        className={`flex-1 px-4 py-2.5 bg-(--Primary) text-(--Text-dark) font-primary font-bold text-sm rounded-md transition-colors uppercase tracking-wide ${isSaving ? "opacity-50 cursor-not-allowed animate-pulse" : "hover:bg-(--Primary-selected) cursor-pointer"}`}
                     >
                         {isEditing ? "Save Changes" : "Add Item"}
                     </button>

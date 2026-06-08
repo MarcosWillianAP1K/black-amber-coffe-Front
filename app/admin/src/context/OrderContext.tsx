@@ -21,8 +21,7 @@ import * as orderService from "../services/orderService";
 // Constants
 // ──────────────────────────────────────────────
 
-const POLL_INTERVAL_MS = 30_000; // 30 seconds
-const COMPLETED_STORAGE_KEY = "completedOrders";
+const POLL_INTERVAL_MS = 30_000; // 30 seconds — starts immediately (no stagger)
 
 const ACTION_STATUS_MAP: Record<string, OrderStatus> = {
     start: "IN PROGRESS",
@@ -43,6 +42,7 @@ export interface NewOrderData {
 interface OrderContextValue {
     orders: Order[];
     isLoading: boolean;
+    error: string | null;
     refresh: () => Promise<void>;
     handleAction: (orderId: number, action: string) => Promise<void>;
     addOrder: (data: NewOrderData) => Promise<void>;
@@ -61,18 +61,21 @@ const OrderContext = createContext<OrderContextValue | undefined>(undefined);
 export function OrderProvider({ children }: { children: ReactNode }) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
 
     // ── Fetch orders ───────────────────────────
 
     const refresh = useCallback(async () => {
+        setError(null);
         try {
             const data = await orderService.fetchOrders();
             setOrders(data);
             localStorage.setItem("orders", JSON.stringify(data));
-        } catch {
-            // Silently fail — next poll will retry
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to load orders";
+            setError(message);
         } finally {
             setIsLoading(false);
         }
@@ -84,6 +87,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         if (mountedRef.current) return;
         mountedRef.current = true;
 
+        // Initial fetch immediately (no stagger — first to load)
         refresh();
 
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
@@ -105,51 +109,51 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             if (!order) return;
             const publicId = order.publicId;
 
-            if (action === "complete") {
-                await orderService.completeOrder(publicId);
-                // Move to local completed list
+            try {
+                if (action === "complete") {
+                    await orderService.completeOrder(publicId);
+                    // Remove card from local list
+                    setOrders((prev) => {
+                        const next = prev.filter((o) => o.id !== orderId);
+                        localStorage.setItem("orders", JSON.stringify(next));
+                        return next;
+                    });
+                    // Refresh from server to stay in sync
+                    refresh();
+                    return;
+                }
+
+                if (action === "delete") {
+                    await orderService.cancelOrder(publicId);
+                    setOrders((prev) => {
+                        const next = prev.filter((o) => o.id !== orderId);
+                        localStorage.setItem("orders", JSON.stringify(next));
+                        return next;
+                    });
+                    refresh();
+                    return;
+                }
+
+                const newStatus = ACTION_STATUS_MAP[action];
+                if (!newStatus) return;
+
+                await orderService.updateOrderStatus(publicId, newStatus);
+                // Optimistic update
                 setOrders((prev) => {
-                    const next = prev.filter((o) => o.id !== orderId);
+                    const now = new Date().toISOString();
+                    const next = prev.map((o) =>
+                        o.id === orderId ? { ...o, status: newStatus, updatedAt: now } : o,
+                    );
                     localStorage.setItem("orders", JSON.stringify(next));
                     return next;
                 });
-                const storedCompleted = localStorage.getItem(COMPLETED_STORAGE_KEY);
-                const completedList: Order[] = storedCompleted ? JSON.parse(storedCompleted) : [];
-                localStorage.setItem(
-                    COMPLETED_STORAGE_KEY,
-                    JSON.stringify([{ ...order, status: "COMPLETED" as OrderStatus }, ...completedList]),
-                );
-                // Refresh from server to stay in sync
+                // Refresh from server to confirm
                 refresh();
-                return;
-            }
-
-            if (action === "delete") {
-                await orderService.cancelOrder(publicId);
-                setOrders((prev) => {
-                    const next = prev.filter((o) => o.id !== orderId);
-                    localStorage.setItem("orders", JSON.stringify(next));
-                    return next;
-                });
+            } catch (error) {
+                console.error("Order action failed:", error);
+                // Revert optimistic update by refreshing from server
                 refresh();
-                return;
             }
-
-            const newStatus = ACTION_STATUS_MAP[action];
-            if (!newStatus) return;
-
-            await orderService.updateOrderStatus(publicId, newStatus);
-            // Optimistic update
-            setOrders((prev) => {
-                const now = new Date().toISOString();
-                const next = prev.map((o) =>
-                    o.id === orderId ? { ...o, status: newStatus, updatedAt: now } : o,
-                );
-                localStorage.setItem("orders", JSON.stringify(next));
-                return next;
-            });
-            // Refresh from server to confirm
-            refresh();
         },
         [orders, refresh],
     );
@@ -175,8 +179,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem("orders", JSON.stringify(next));
                 return next;
             });
+
+            // Refresh from server — pedido mock some, lista real sincroniza
+            refresh();
         },
-        [],
+        [refresh],
     );
 
     // ── Render ─────────────────────────────────
@@ -186,6 +193,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             value={{
                 orders,
                 isLoading,
+                error,
                 refresh,
                 handleAction,
                 addOrder,
