@@ -8,6 +8,7 @@ import { useState } from "react";
 import { PerfilCard } from "ui-shared/components/ui/PerfilCard";
 import { CompTime } from "ui-shared/components/CompTIme";
 import { OptionsEllipsis } from "ui-shared/components/OptionElipisses";
+import { ConfirmDialog } from "ui-shared/components/ConfirmDialog";
 import type { Worker } from "shared-utils/types/worker";
 
 /** CardEmployee props = Worker data + action callbacks */
@@ -19,6 +20,7 @@ export interface CardEmployeeProps extends Worker {
 
 export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmployee, onBlockEmployee, onViewEmployee }: CardEmployeeProps) {
     const [isProcessing, setIsProcessing] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const handleAction = async (action: () => void) => {
         setIsProcessing(true);
@@ -46,7 +48,7 @@ export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmploy
                     options={[
                         { label: "View Profile", action: () => handleAction(() => onViewEmployee(publicId)) },
                         { label: "Block Employee", action: () => handleAction(() => onBlockEmployee(publicId)) },
-                        { label: "Delete", action: () => handleAction(() => onDeleteEmployee(publicId)), danger: true },
+                        { label: "Delete", action: () => setConfirmDelete(true), danger: true },
                     ]}
                 />
             </div>
@@ -54,6 +56,21 @@ export function CardEmployee({ publicId, profile, role, isActive, onDeleteEmploy
             <div className="w-full h-fit">
                 <CompTime active={isActive} />
             </div>
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={confirmDelete}
+                title="Delete Employee"
+                description={`Are you sure you want to delete ${profile.fullName}? This action cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                danger
+                onConfirm={() => {
+                    setConfirmDelete(false);
+                    handleAction(() => onDeleteEmployee(publicId));
+                }}
+                onCancel={() => setConfirmDelete(false)}
+            />
         </div>
     );
 }

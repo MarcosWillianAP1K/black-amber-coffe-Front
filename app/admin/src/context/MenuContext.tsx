@@ -63,7 +63,6 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         try {
             const data = await menuService.fetchMenuItems();
             setItems(data);
-            localStorage.setItem("menuItems", JSON.stringify(data));
         } catch (err) {
             const message = err instanceof Error ? err.message : "Failed to load menu";
             setError(message);
@@ -97,19 +96,24 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
     const onCreate = useCallback(
         async (data: ProductInput) => {
-            const { imageFile, ...productData } = data;
-            const created = await menuService.createMenuItem(productData);
+            try {
+                const { imageFile, ...productData } = data;
+                const created = await menuService.createMenuItem(productData);
 
-            // Upload image in background after creation
-            if (imageFile) {
-                await menuService.uploadProductImage(created.publicId, imageFile);
+                // Upload image in background after creation
+                if (imageFile) {
+                    await menuService.uploadProductImage(created.publicId, imageFile);
+                }
+
+                setItems((prev) => {
+                    const next = [...prev, created];
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to create menu item";
+                setError(message);
+                throw err;
             }
-
-            setItems((prev) => {
-                const next = [...prev, created];
-                localStorage.setItem("menuItems", JSON.stringify(next));
-                return next;
-            });
             refresh();
         },
         [refresh],
@@ -117,22 +121,27 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
     const onEdit = useCallback(
         async (id: number, data: ProductInput) => {
-            const product = items.find((item) => item.id === id);
-            if (!product) throw new Error(`Product ${id} not found`);
+            try {
+                const product = items.find((item) => item.id === id);
+                if (!product) throw new Error(`Product ${id} not found`);
 
-            const { imageFile, ...productData } = data;
-            const updated = await menuService.updateMenuItem(product.publicId, productData);
+                const { imageFile, ...productData } = data;
+                const updated = await menuService.updateMenuItem(product.publicId, productData);
 
-            // Upload image in background after update
-            if (imageFile) {
-                await menuService.uploadProductImage(product.publicId, imageFile);
+                // Upload image in background after update
+                if (imageFile) {
+                    await menuService.uploadProductImage(product.publicId, imageFile);
+                }
+
+                setItems((prev) => {
+                    const next = prev.map((item) => (item.id === id ? updated : item));
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to update menu item";
+                setError(message);
+                throw err;
             }
-
-            setItems((prev) => {
-                const next = prev.map((item) => (item.id === id ? updated : item));
-                localStorage.setItem("menuItems", JSON.stringify(next));
-                return next;
-            });
             refresh();
         },
         [items, refresh],
@@ -140,15 +149,20 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
     const onDelete = useCallback(
         async (id: number) => {
-            const product = items.find((item) => item.id === id);
-            if (!product) return;
+            try {
+                const product = items.find((item) => item.id === id);
+                if (!product) return;
 
-            await menuService.deleteMenuItem(product.publicId);
-            setItems((prev) => {
-                const next = prev.filter((item) => item.id !== id);
-                localStorage.setItem("menuItems", JSON.stringify(next));
-                return next;
-            });
+                await menuService.deleteMenuItem(product.publicId);
+                setItems((prev) => {
+                    const next = prev.filter((item) => item.id !== id);
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to delete menu item";
+                setError(message);
+                throw err;
+            }
             refresh();
         },
         [items, refresh],

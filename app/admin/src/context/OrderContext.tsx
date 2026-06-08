@@ -72,7 +72,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         try {
             const data = await orderService.fetchOrders();
             setOrders(data);
-            localStorage.setItem("orders", JSON.stringify(data));
         } catch (err) {
             const message = err instanceof Error ? err.message : "Failed to load orders";
             setError(message);
@@ -115,7 +114,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                     // Remove card from local list
                     setOrders((prev) => {
                         const next = prev.filter((o) => o.id !== orderId);
-                        localStorage.setItem("orders", JSON.stringify(next));
                         return next;
                     });
                     // Refresh from server to stay in sync
@@ -127,7 +125,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                     await orderService.cancelOrder(publicId);
                     setOrders((prev) => {
                         const next = prev.filter((o) => o.id !== orderId);
-                        localStorage.setItem("orders", JSON.stringify(next));
                         return next;
                     });
                     refresh();
@@ -144,7 +141,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                     const next = prev.map((o) =>
                         o.id === orderId ? { ...o, status: newStatus, updatedAt: now } : o,
                     );
-                    localStorage.setItem("orders", JSON.stringify(next));
                     return next;
                 });
                 // Refresh from server to confirm
@@ -176,7 +172,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
             setOrders((prev) => {
                 const next = [created, ...prev];
-                localStorage.setItem("orders", JSON.stringify(next));
                 return next;
             });
 

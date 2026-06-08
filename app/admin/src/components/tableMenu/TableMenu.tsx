@@ -13,6 +13,7 @@ import { Plus } from "lucide-react";
 import type { Product, ProductInput } from "shared-utils/types/product";
 import { FilterButton, type FilterOption } from "ui-shared/components/FilterButton";
 import { SearchBar } from "ui-shared/components/ui/SearchBar";
+import { ConfirmDialog } from "ui-shared/components/ConfirmDialog";
 import { TableMenuHeader } from "./TableMenuHeader";
 import { TableMenuRow } from "./TableMenuRow";
 import { MenuItemFormPanel } from "./MenuItemFormPanel";
@@ -47,6 +48,7 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
     const [searchTerm, setSearchTerm] = useState("");
     const [sortType, setSortType] = useState<"default" | "name-asc" | "name-desc" | "price-asc" | "price-desc">("default");
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     const handleEditClick = useCallback((item: Product) => {
         setPanelState({ mode: "edit", item });
@@ -54,16 +56,22 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
 
     const handleDeleteClick = useCallback(
         (id: number) => {
-            handlers.onDelete(id);
-            // Close panel if we're editing the deleted item
-            setPanelState((prev) =>
-                prev.mode === "edit" && prev.item.id === id
-                    ? { mode: "closed" }
-                    : prev
-            );
+            setDeleteTarget(id);
         },
-        [handlers]
+        []
     );
+
+    const handleConfirmDelete = useCallback(() => {
+        if (deleteTarget === null) return;
+        handlers.onDelete(deleteTarget);
+        // Close panel if we're editing the deleted item
+        setPanelState((prev) =>
+            prev.mode === "edit" && prev.item.id === deleteTarget
+                ? { mode: "closed" }
+                : prev
+        );
+        setDeleteTarget(null);
+    }, [deleteTarget, handlers]);
 
     const handleAddClick = useCallback(() => {
         setPanelState({ mode: "create" });
@@ -259,6 +267,18 @@ export function TableMenu({ items, handlers, title = "ACTIVE MENU", isLive = tru
                     categories={categories}
                 />
             )}
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={deleteTarget !== null}
+                title="Delete Menu Item"
+                description={`Are you sure you want to delete this menu item? This action cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                danger
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setDeleteTarget(null)}
+            />
         </div>
     );
 }

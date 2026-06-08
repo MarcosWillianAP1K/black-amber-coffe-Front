@@ -60,7 +60,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         try {
             const data = await employeeService.fetchEmployees();
             setEmployees(data);
-            localStorage.setItem("employees", JSON.stringify(data));
         } catch (err) {
             const message = err instanceof Error ? err.message : "Failed to load employees";
             setError(message);
@@ -94,12 +93,17 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     const deleteEmployee = useCallback(
         async (publicId: string) => {
-            await employeeService.deleteEmployee(publicId);
-            setEmployees((prev) => {
-                const next = prev.filter((e) => e.publicId !== publicId);
-                localStorage.setItem("employees", JSON.stringify(next));
-                return next;
-            });
+            try {
+                await employeeService.deleteEmployee(publicId);
+                setEmployees((prev) => {
+                    const next = prev.filter((e) => e.publicId !== publicId);
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to delete employee";
+                setError(message);
+                throw err;
+            }
             refresh();
         },
         [refresh],
@@ -107,12 +111,17 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     const toggleEmployeeStatus = useCallback(
         async (publicId: string) => {
-            const updated = await employeeService.toggleEmployeeStatus(publicId);
-            setEmployees((prev) => {
-                const next = prev.map((e) => (e.publicId === publicId ? updated : e));
-                localStorage.setItem("employees", JSON.stringify(next));
-                return next;
-            });
+            try {
+                const updated = await employeeService.toggleEmployeeStatus(publicId);
+                setEmployees((prev) => {
+                    const next = prev.map((e) => (e.publicId === publicId ? updated : e));
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to toggle employee status";
+                setError(message);
+                throw err;
+            }
             refresh();
         },
         [refresh],
@@ -120,12 +129,17 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     const updateEmployee = useCallback(
         async (publicId: string, updates: Partial<WorkerUpdateInput>) => {
-            const updated = await employeeService.updateEmployee(publicId, updates);
-            setEmployees((prev) => {
-                const next = prev.map((e) => (e.publicId === publicId ? updated : e));
-                localStorage.setItem("employees", JSON.stringify(next));
-                return next;
-            });
+            try {
+                const updated = await employeeService.updateEmployee(publicId, updates);
+                setEmployees((prev) => {
+                    const next = prev.map((e) => (e.publicId === publicId ? updated : e));
+                    return next;
+                });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to update employee";
+                setError(message);
+                throw err;
+            }
             refresh();
         },
         [refresh],
