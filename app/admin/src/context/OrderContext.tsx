@@ -161,8 +161,11 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                     data.itens?.map((item) => ({
                         productId: item.productId,
                         quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        name: item.name,
                         observation: null,
                     })) ?? [],
+                totalPrice: data.totalPrice,
                 paymentMethod: "CASH",
                 observation: data.observation ?? null,
             });
@@ -172,11 +175,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem("orders", JSON.stringify(next));
                 return next;
             });
-
-            // Refresh from server to confirm
-            refresh();
         },
-        [refresh],
+        [],
     );
 
     // ── Render ─────────────────────────────────

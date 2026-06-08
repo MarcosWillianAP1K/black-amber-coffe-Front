@@ -4,11 +4,12 @@ import { FilterButton, type FilterOption } from "ui-shared/components/FilterButt
 import { OverlayOrder } from "../../components/OverlayOrder/OverlayOrder";
 import { CardOrder } from "../../components/cardOrder/CardOrder";
 import { useOrders } from "../../hooks/useOrders";
-
+import { useMenuItems } from "../../hooks/useMenuItems";
 
 
 export function LiveOrders() {
     const { orders, handleAction, addOrder } = useOrders();
+    const { items: products } = useMenuItems();
     const [sortType, setSortType] = useState<"created" | "importance" | "value">("created");
 
     const sortedOrders = useMemo(() => {
@@ -69,7 +70,7 @@ export function LiveOrders() {
 
         
             <div className="w-full flex flex-wrap items-center justify-end gap-4">
-                <OverlayOrder onSave={addOrder} />
+                <OverlayOrder onSave={addOrder} products={products} />
                 <FilterButton
                     title="Filter orders"
                     buttonLabel="Filter orders"

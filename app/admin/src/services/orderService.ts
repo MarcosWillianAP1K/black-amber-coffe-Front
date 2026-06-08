@@ -17,24 +17,6 @@ let orders = [...MOCK_ORDERS];
 let completedOrders: Order[] = [];
 
 // ──────────────────────────────────────────────
-// Types for API responses
-// ──────────────────────────────────────────────
-
-interface OrderCreatePayload {
-    items: Array<{
-        productId: number;
-        quantity: number;
-        observation?: string | null;
-    }>;
-    paymentMethod?: string;
-    observation?: string | null;
-}
-
-interface CreateOrderResponse {
-    data: Order;
-}
-
-// ──────────────────────────────────────────────
 // Service functions
 // ──────────────────────────────────────────────
 
@@ -87,47 +69,38 @@ export async function updateOrderStatus(publicId: string, newStatus: OrderStatus
 }
 
 /**
- * Create a new order.
- * Uses the user POST endpoint: /api/user/orders
+ * Create a new order — LOCAL ONLY (no API endpoint for workers/admins).
+ * Uses in-memory mock to create the order for UI representation.
+ * Now accepts totalPrice and per-item unitPrice for correct display.
  */
-export async function createOrder(data: OrderCreatePayload): Promise<Order> {
-    if (USE_MOCK) {
-        const id = Date.now();
-        const now = new Date().toISOString();
-        const newOrder: Order = {
-            id,
-            publicId: `ord-${id}`,
-            code: `PED-${now.slice(0, 10).replace(/-/g, "")}-${String(id).slice(-4)}`,
-            status: "PENDING",
-            totalPrice: 0,
-            paymentMethod: data.paymentMethod ?? null,
-            observation: data.observation ?? null,
-            itens: data.items.map((item, idx) => ({
-                id: idx,
-                name: `Product #${item.productId}`,
-                price: 0,
-                quantity: item.quantity,
-                observation: item.observation ?? null,
-            })),
-            createdAt: now,
-            updatedAt: now,
-        };
-        orders = [newOrder, ...orders];
-        return newOrder;
-    }
-
-    const response = await authFetch(API.OrdersUser.Create, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to create order: ${response.status}`);
-    }
-
-    const payload = (await response.json()) as CreateOrderResponse;
-    return payload.data;
+export async function createOrder(data: {
+    items: Array<{ productId: number; quantity: number; unitPrice?: number; name?: string; observation?: string | null }>;
+    totalPrice?: number;
+    paymentMethod?: string;
+    observation?: string | null;
+}): Promise<Order> {
+    const id = Date.now();
+    const now = new Date().toISOString();
+    const newOrder: Order = {
+        id,
+        publicId: `ord-${id}`,
+        code: `PED-${now.slice(0, 10).replace(/-/g, "")}-${String(id).slice(-4)}`,
+        status: "PENDING",
+        totalPrice: data.totalPrice ?? 0,
+        paymentMethod: data.paymentMethod ?? null,
+        observation: data.observation ?? null,
+        itens: data.items.map((item, idx) => ({
+            id: idx,
+            name: item.name ?? `Product #${item.productId}`,
+            price: item.unitPrice ?? 0,
+            quantity: item.quantity,
+            observation: item.observation ?? null,
+        })),
+        createdAt: now,
+        updatedAt: now,
+    };
+    orders = [newOrder, ...orders];
+    return newOrder;
 }
 
 /** Move an order to completed list — delegates to updateOrderStatus when API is active */

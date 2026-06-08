@@ -31,11 +31,6 @@ export const API = {
         FindById: (id: string) => `${API_BASE}/admin/orders/${id}`,
         CancelById: (id: string) => `${API_BASE}/admin/orders/${id}/cancel`,
     },
-    OrdersUser: {
-        Create: `${API_BASE}/user/orders`,
-        List: `${API_BASE}/user/orders`,
-        Cancel: (id: string) => `${API_BASE}/user/orders/${id}/cancel`,
-    },
     OrdersWorker: {
         List: `${API_BASE}/worker/orders`,
         FindById: (id: string) => `${API_BASE}/worker/orders/${id}`,
@@ -44,6 +39,11 @@ export const API = {
     Products: {
         List: `${API_BASE}/products`,
         ListCategories: `${API_BASE}/products/categories`,
+    },
+    OrdersUser: {
+        Create: `${API_BASE}/user/orders`,
+        List: `${API_BASE}/user/orders`,
+        Cancel: (id: string) => `${API_BASE}/user/orders/${id}/cancel`,
     },
     AdminProducts: {
         Create: `${API_BASE}/admin/products`,

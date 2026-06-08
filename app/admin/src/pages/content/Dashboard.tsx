@@ -1,6 +1,7 @@
 // Shared UI components
 import { DestakTitle } from "ui-shared/components/ui/DestakTitle";
 import { CardAnalytics } from "ui-shared/components/CardAnalytics";
+import { ChartAnalytics } from "ui-shared/components/ChartAnalytics";
 import { StatusBadge } from "ui-shared/components/ui/StatusBadge";
 
 // Admin components
@@ -13,6 +14,7 @@ import { useAnalytics } from "../../hooks/useAnalytics";
 import { useOrders } from "../../hooks/useOrders";
 import { useInventoryItems } from "../../hooks/useInventoryItems";
 import { useEmployee } from "../../hooks/useEmployee";
+import { useMenuItems } from "../../hooks/useMenuItems";
 
 // Icons
 import { Coffee, TrendingUp, Truck, Users, Clock, Box } from "lucide-react";
@@ -27,10 +29,17 @@ const ICON_MAP = {
 } as const;
 
 export function Dashboard() {
-    const { data } = useAnalytics();
     const { orders, handleAction } = useOrders();
-    const { items } = useInventoryItems();
+    const { items: inventoryItems } = useInventoryItems();
     const { employees, deleteEmployee, toggleEmployeeStatus } = useEmployee();
+    const { items: products } = useMenuItems();
+
+    const { data } = useAnalytics({
+        orders,
+        employees,
+        products,
+        inventory: inventoryItems,
+    });
 
     const priorityOrders = orders
         .filter((order) => order.status === "LATE" || order.status === "IN PROGRESS")
@@ -65,6 +74,16 @@ export function Dashboard() {
                     );
                 })}
             </div>
+
+            {/* Chart */}
+            {data?.chart && data.chart.data.length > 0 && (
+                <ChartAnalytics
+                    title={data.chart.title}
+                    data={data.chart.data}
+                    labels={data.chart.labels}
+                    seriesLabel={data.chart.seriesLabel}
+                />
+            )}
 
             {/* Main content */}
             <div className="flex flex-row gap-6">
@@ -105,7 +124,7 @@ export function Dashboard() {
                 {/* Side widgets */}
                 <div className="w-160 h-100 2xl:flex-1 flex flex-col gap-6">
                     {/* Inventory alerts */}
-                    <WidgetInventoryAlerts items={items} />
+                    <WidgetInventoryAlerts items={inventoryItems} />
 
                     {/* Active staff */}
                     <WidgetActiveStaff

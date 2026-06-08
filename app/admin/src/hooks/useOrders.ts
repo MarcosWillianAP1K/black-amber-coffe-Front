@@ -1,8 +1,5 @@
 /**
  * useOrders — Consumes the shared OrderContext.
- *
- * The heavy lifting (fetch, polling, mutations) is centralized in OrderContext,
- * so this hook is just a thin wrapper around useOrderContext.
  */
 
 import { useOrderContext } from "../context/OrderContext";

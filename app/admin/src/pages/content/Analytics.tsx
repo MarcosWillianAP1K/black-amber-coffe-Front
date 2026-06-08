@@ -2,6 +2,10 @@ import { DestakTitle } from "ui-shared/components/ui/DestakTitle";
 import { CardAnalytics } from "ui-shared/components/CardAnalytics";
 import { ChartAnalytics } from "ui-shared/components/ChartAnalytics";
 import { useAnalytics } from "../../hooks/useAnalytics";
+import { useOrders } from "../../hooks/useOrders";
+import { useEmployee } from "../../hooks/useEmployee";
+import { useMenuItems } from "../../hooks/useMenuItems";
+import { useInventoryItems } from "../../hooks/useInventoryItems";
 import {
     Coffee,
     TrendingUp,
@@ -21,7 +25,17 @@ const ICON_MAP = {
 } as const;
 
 export function Analytics() {
-    const { data } = useAnalytics();
+    const { orders } = useOrders();
+    const { employees } = useEmployee();
+    const { items: products } = useMenuItems();
+    const { items: inventoryItems } = useInventoryItems();
+
+    const { data } = useAnalytics({
+        orders,
+        employees,
+        products,
+        inventory: inventoryItems,
+    });
 
     return (
         <div className="w-full h-fit gap-6 flex flex-col">

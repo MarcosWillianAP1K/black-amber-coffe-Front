@@ -160,3 +160,96 @@ export async function deleteMenuItem(publicId: string): Promise<void> {
         throw new Error(`Failed to delete menu item: ${response.status}`);
     }
 }
+
+/** Upload a product image */
+export async function uploadProductImage(publicId: string, file: File): Promise<Product> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await authFetch(API.AdminProducts.UploadImageById(publicId), {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to upload image: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as ProductWithMessageResponse;
+    return payload.data;
+}
+
+/** Activate a product */
+export async function activateProduct(publicId: string): Promise<Product> {
+    const response = await authFetch(API.AdminProducts.ActiveProductsByID(publicId), {
+        method: "PATCH",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to activate product: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as ProductWithMessageResponse;
+    return payload.data;
+}
+
+/** Deactivate a product */
+export async function deactivateProduct(publicId: string): Promise<Product> {
+    const response = await authFetch(API.AdminProducts.DesactiveProductsByID(publicId), {
+        method: "PATCH",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to deactivate product: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as ProductWithMessageResponse;
+    return payload.data;
+}
+
+interface ProductStock {
+    productId: number;
+    quantity: number;
+    minQuantity: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface StockResponse {
+    data: ProductStock;
+}
+
+interface StockUpdatePayload {
+    quantity: number;
+    minQuantity: number;
+}
+
+/** Get product stock */
+export async function getProductStock(publicId: string): Promise<ProductStock> {
+    const response = await authFetch(API.AdminProducts.GetProductsById(publicId), {
+        method: "GET",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to get stock: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as StockResponse;
+    return payload.data;
+}
+
+/** Update product stock */
+export async function updateProductStock(publicId: string, data: StockUpdatePayload): Promise<ProductStock> {
+    const response = await authFetch(API.AdminProducts.UpdateProductsById(publicId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to update stock: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as { data: ProductStock; message?: string };
+    return payload.data;
+}

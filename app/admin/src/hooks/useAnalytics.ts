@@ -1,40 +1,41 @@
 /**
- * useAnalytics — Custom hook for analytics cards and chart.
+ * useAnalytics — Computes analytics cards and chart from live context data.
+ *
+ * Instead of fetching from a mock API, it receives orders, employees,
+ * products, and inventory directly and computes the dashboard metrics.
  */
 
-import { useEffect, useState } from "react";
-import type { AnalyticsData } from "../services/analyticsService";
-import * as analyticsService from "../services/analyticsService";
+import { useMemo } from "react";
+import type { Order } from "shared-utils/types/order";
+import type { Worker } from "shared-utils/types/worker";
+import type { Product } from "shared-utils/types/product";
+import type { InventoryItem } from "shared-utils/types/inventory";
+import { computeAnalytics, type AnalyticsData } from "../services/analyticsService";
+
+interface UseAnalyticsInput {
+    orders: Order[];
+    employees: Worker[];
+    products: Product[];
+    inventory: InventoryItem[];
+}
 
 interface UseAnalyticsReturn {
     data: AnalyticsData | null;
     isLoading: boolean;
 }
 
-export function useAnalytics(): UseAnalyticsReturn {
-    const [data, setData] = useState<AnalyticsData | null>(() => {
-        const storedData = localStorage.getItem("analyticsData");
-        return storedData ? JSON.parse(storedData) : null;
-    });
-    const [isLoading, setIsLoading] = useState(() => !localStorage.getItem("analyticsData"));
+export function useAnalytics(input: UseAnalyticsInput): UseAnalyticsReturn {
+    const data = useMemo<AnalyticsData>(() => {
+        return computeAnalytics(
+            input.orders,
+            input.employees,
+            input.products,
+            input.inventory,
+        );
+    }, [input.orders, input.employees, input.products, input.inventory]);
 
-    useEffect(() => {
-        let cancelled = false;
-
-        if (!data) {
-            analyticsService.fetchAnalytics().then((response) => {
-                if (!cancelled) {
-                    setData(response);
-                    localStorage.setItem("analyticsData", JSON.stringify(response));
-                    setIsLoading(false);
-                }
-            });
-        }
-
-        return () => {
-            cancelled = true;
-        };
-    }, [data]);
-
-    return { data, isLoading };
+    return {
+        data,
+        isLoading: false,
+    };
 }

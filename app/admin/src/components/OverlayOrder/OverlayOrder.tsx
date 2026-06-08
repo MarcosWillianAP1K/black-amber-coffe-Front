@@ -1,18 +1,17 @@
-
 import { useState, useEffect } from "react";
 import { ButtonPrimary } from "ui-shared/components/ui/ButtonPrimary";
 import { FormOrder } from "./FormOrder";
 import type { FormOrderData } from "./FormOrder";
 import type { NewOrderData } from "../../hooks/useOrders";
-
-
+import type { Product } from "shared-utils/types/product";
 
 
 interface OverlayOrderProps {
     onSave: (data: NewOrderData) => void;
+    products: Product[];
 }
 
-export function OverlayOrder({ onSave }: OverlayOrderProps) {
+export function OverlayOrder({ onSave, products }: OverlayOrderProps) {
     const [isOrderOverlayOpen, setIsOrderOverlayOpen] = useState(false);
 
 
@@ -54,6 +53,7 @@ export function OverlayOrder({ onSave }: OverlayOrderProps) {
                     <FormOrder
                         onClose={() => setIsOrderOverlayOpen(false)}
                         onSave={handleSave}
+                        products={products}
                     />
 
                 </div>

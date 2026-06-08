@@ -1,17 +1,18 @@
-
 import { useMemo, useState } from "react";
-import { MOCK_PRODUCTS } from "shared-utils/MockBD.js";
+import type { Product } from "shared-utils/types/product";
 
 /** Simplified form data for creating a new order via the overlay form */
 export interface FormOrderData {
     observation: string;
     totalPrice: number;
-    items: Array<{ productId: number; quantity: number; unitPrice: number }>;
+    items: Array<{ productId: number; quantity: number; unitPrice: number; name?: string }>;
 }
 
 interface FormOrderProps {
     onClose: () => void;
     onSave: (data: FormOrderData) => void;
+    /** Available products to select from */
+    products: Product[];
 }
 
 interface FormOrderState {
@@ -28,12 +29,6 @@ const EMPTY_FORM: FormOrderState = {
     observation: "",
 };
 
-const MENU_BY_ID = new Map(
-    MOCK_PRODUCTS.map((item) => [item.id, item])
-);
-
-const MENU_OPTIONS = MOCK_PRODUCTS.map((item) => ({ id: item.id, name: item.name, price: item.price }));
-
 function createItemRow(): OrderItemRow {
     return {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -42,19 +37,25 @@ function createItemRow(): OrderItemRow {
     };
 }
 
-export function FormOrder({ onClose, onSave }: FormOrderProps) {
+export function FormOrder({ onClose, onSave, products }: FormOrderProps) {
+    const menuById = useMemo(() => new Map(products.map((item) => [item.id, item])), [products]);
+    const menuOptions = useMemo(
+        () => products.map((item) => ({ id: item.id, name: item.name, price: item.price })),
+        [products],
+    );
+
     const [form, setForm] = useState<FormOrderState>(EMPTY_FORM);
     const [items, setItems] = useState<OrderItemRow[]>([createItemRow()]);
     const [error, setError] = useState("");
 
     const total = useMemo(() => {
         return items.reduce((sum, item) => {
-            const product = typeof item.productId === "number" ? MENU_BY_ID.get(item.productId) : undefined;
+            const product = typeof item.productId === "number" ? menuById.get(item.productId) : undefined;
             const price = product?.price ?? 0;
             const qty = Number.isFinite(item.qty) ? item.qty : 0;
             return sum + price * qty;
         }, 0);
-    }, [items]);
+    }, [items, menuById]);
 
     const handleAddItem = () => {
         setItems((prev) => [...prev, createItemRow()]);
@@ -89,11 +90,12 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
         setError("");
 
         const orderItems = cleanedItems.map((row) => {
-            const product = MENU_BY_ID.get(row.productId as number);
+            const product = menuById.get(row.productId as number);
             return {
                 productId: row.productId as number,
                 quantity: row.qty,
                 unitPrice: product?.price ?? 0,
+                name: product?.name ?? `Product #${row.productId}`,
             };
         });
 
@@ -167,7 +169,7 @@ export function FormOrder({ onClose, onSave }: FormOrderProps) {
                                     className="flex-1 bg-(--Page-background) border border-(--Border) rounded-md px-3 py-2 text-(--Text-gray) text-sm font-secondary focus:outline-none focus:border-(--Primary) transition-colors"
                                 >
                                     <option value="">Select an item</option>
-                                    {MENU_OPTIONS.map((opt) => (
+                                    {menuOptions.map((opt) => (
                                         <option key={opt.id} value={opt.id}>
                                             {opt.name} — ${opt.price.toFixed(2)}
                                         </option>
