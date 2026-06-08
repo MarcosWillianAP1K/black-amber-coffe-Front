@@ -1,11 +1,14 @@
 import { RouterProvider } from "react-router-dom";
-import { router } from "./Router"; // Ajuste o caminho se tiver colocado em outra pasta
+import { router } from "./Router";
 import { AuthProvider } from "./context/AuthContext";
+import { OrderProvider } from "./context/OrderContext";
 
 export default function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <OrderProvider>
+        <RouterProvider router={router} />
+      </OrderProvider>
     </AuthProvider>
   );
 }
