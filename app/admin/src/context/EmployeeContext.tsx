@@ -52,19 +52,23 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
+    const abortedRef = useRef(false);
 
     // ── Fetch employees ──────────────────────
 
     const refresh = useCallback(async () => {
+        if (abortedRef.current) return;
         setError(null);
         try {
             const data = await employeeService.fetchEmployees();
-            setEmployees(data);
+            if (!abortedRef.current) setEmployees(data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to load employees";
-            setError(message);
+            if (!abortedRef.current) {
+                const message = err instanceof Error ? err.message : "Failed to load employees";
+                setError(message);
+            }
         } finally {
-            setIsLoading(false);
+            if (!abortedRef.current) setIsLoading(false);
         }
     }, []);
 
@@ -74,12 +78,14 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (mountedRef.current) return;
         mountedRef.current = true;
+        abortedRef.current = false;
 
         const initialTimer = setTimeout(refresh, 6_000);
 
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
 
         return () => {
+            abortedRef.current = true;
             clearTimeout(initialTimer);
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
@@ -95,16 +101,13 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         async (publicId: string) => {
             try {
                 await employeeService.deleteEmployee(publicId);
-                setEmployees((prev) => {
-                    const next = prev.filter((e) => e.publicId !== publicId);
-                    return next;
-                });
+                setEmployees((prev) => prev.filter((e) => e.publicId !== publicId));
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to delete employee";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [refresh],
     );
@@ -113,16 +116,13 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         async (publicId: string) => {
             try {
                 const updated = await employeeService.toggleEmployeeStatus(publicId);
-                setEmployees((prev) => {
-                    const next = prev.map((e) => (e.publicId === publicId ? updated : e));
-                    return next;
-                });
+                setEmployees((prev) => prev.map((e) => (e.publicId === publicId ? updated : e)));
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to toggle employee status";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [refresh],
     );
@@ -131,16 +131,13 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         async (publicId: string, updates: Partial<WorkerUpdateInput>) => {
             try {
                 const updated = await employeeService.updateEmployee(publicId, updates);
-                setEmployees((prev) => {
-                    const next = prev.map((e) => (e.publicId === publicId ? updated : e));
-                    return next;
-                });
+                setEmployees((prev) => prev.map((e) => (e.publicId === publicId ? updated : e)));
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to update employee";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [refresh],
     );
@@ -168,6 +165,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 // Hook
 // ──────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useEmployeeContext(): EmployeeContextValue {
     const context = useContext(EmployeeContext);
     if (!context) {

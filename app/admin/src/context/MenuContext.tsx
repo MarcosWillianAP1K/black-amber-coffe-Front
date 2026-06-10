@@ -55,19 +55,23 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
+    const abortedRef = useRef(false);
 
-    // ── Fetch items ──────────────────────────
+    // ── Fetch items ──────────────────────
 
     const refresh = useCallback(async () => {
+        if (abortedRef.current) return;
         setError(null);
         try {
             const data = await menuService.fetchMenuItems();
-            setItems(data);
+            if (!abortedRef.current) setItems(data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to load menu";
-            setError(message);
+            if (!abortedRef.current) {
+                const message = err instanceof Error ? err.message : "Failed to load menu";
+                setError(message);
+            }
         } finally {
-            setIsLoading(false);
+            if (!abortedRef.current) setIsLoading(false);
         }
     }, []);
 
@@ -77,12 +81,14 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (mountedRef.current) return;
         mountedRef.current = true;
+        abortedRef.current = false;
 
         const initialTimer = setTimeout(refresh, 3_000);
 
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
 
         return () => {
+            abortedRef.current = true;
             clearTimeout(initialTimer);
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
@@ -106,12 +112,12 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 }
 
                 setItems((prev) => [...prev, created]);
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to create menu item";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [refresh],
     );
@@ -131,12 +137,12 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 }
 
                 setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to update menu item";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [items, refresh],
     );
@@ -148,16 +154,13 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 if (!product) return;
 
                 await menuService.deleteMenuItem(product.publicId);
-                setItems((prev) => {
-                    const next = prev.filter((item) => item.id !== id);
-                    return next;
-                });
+                setItems((prev) => prev.filter((item) => item.id !== id));
+                refresh();
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to delete menu item";
                 setError(message);
                 throw err;
             }
-            refresh();
         },
         [items, refresh],
     );

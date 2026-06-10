@@ -64,19 +64,23 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const mountedRef = useRef(false);
+    const abortedRef = useRef(false);
 
     // ── Fetch orders ───────────────────────────
 
     const refresh = useCallback(async () => {
+        if (abortedRef.current) return;
         setError(null);
         try {
             const data = await orderService.fetchOrders();
-            setOrders(data);
+            if (!abortedRef.current) setOrders(data);
         } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to load orders";
-            setError(message);
+            if (!abortedRef.current) {
+                const message = err instanceof Error ? err.message : "Failed to load orders";
+                setError(message);
+            }
         } finally {
-            setIsLoading(false);
+            if (!abortedRef.current) setIsLoading(false);
         }
     }, []);
 
@@ -85,6 +89,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (mountedRef.current) return;
         mountedRef.current = true;
+        abortedRef.current = false;
 
         // Initial fetch immediately (no stagger — first to load)
         refresh();
@@ -92,6 +97,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         pollingRef.current = setInterval(refresh, POLL_INTERVAL_MS);
 
         return () => {
+            abortedRef.current = true;
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
                 pollingRef.current = null;
@@ -111,22 +117,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
             try {
                 if (action === "complete") {
                     await orderService.completeOrder(publicId);
-                    // Remove card from local list
-                    setOrders((prev) => {
-                        const next = prev.filter((o) => o.id !== orderId);
-                        return next;
-                    });
-                    // Refresh from server to stay in sync
+                    setOrders((prev) => prev.filter((o) => o.id !== orderId));
                     refresh();
                     return;
                 }
 
                 if (action === "delete") {
                     await orderService.cancelOrder(publicId);
-                    setOrders((prev) => {
-                        const next = prev.filter((o) => o.id !== orderId);
-                        return next;
-                    });
+                    setOrders((prev) => prev.filter((o) => o.id !== orderId));
                     refresh();
                     return;
                 }
@@ -138,15 +136,14 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 // Optimistic update
                 setOrders((prev) => {
                     const now = new Date().toISOString();
-                    const next = prev.map((o) =>
+                    return prev.map((o) =>
                         o.id === orderId ? { ...o, status: newStatus, updatedAt: now } : o,
                     );
-                    return next;
                 });
-                // Refresh from server to confirm
                 refresh();
-            } catch (error) {
-                console.error("Order action failed:", error);
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Order action failed";
+                setError(message);
                 // Revert optimistic update by refreshing from server
                 refresh();
             }
@@ -156,27 +153,28 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
     const addOrder = useCallback(
         async (data: NewOrderData) => {
-            const created = await orderService.createOrder({
-                items:
-                    data.itens?.map((item) => ({
-                        productId: item.productId,
-                        quantity: item.quantity,
-                        unitPrice: item.unitPrice,
-                        name: item.name,
-                        observation: null,
-                    })) ?? [],
-                totalPrice: data.totalPrice,
-                paymentMethod: "CASH",
-                observation: data.observation ?? null,
-            });
+            try {
+                const created = await orderService.createOrder({
+                    items:
+                        data.itens?.map((item) => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                            name: item.name,
+                            observation: null,
+                        })) ?? [],
+                    totalPrice: data.totalPrice,
+                    paymentMethod: "CASH",
+                    observation: data.observation ?? null,
+                });
 
-            setOrders((prev) => {
-                const next = [created, ...prev];
-                return next;
-            });
-
-            // Refresh from server — pedido mock some, lista real sincroniza
-            refresh();
+                setOrders((prev) => [created, ...prev]);
+                refresh();
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to create order";
+                setError(message);
+                throw err;
+            }
         },
         [refresh],
     );
