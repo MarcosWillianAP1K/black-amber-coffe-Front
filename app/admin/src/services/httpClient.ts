@@ -1,5 +1,38 @@
 import { getStoredRefreshToken, getStoredToken, logoutService, refreshTokenService } from "./authService.ts";
 
+/**
+ * Singleton refresh promise — ensures concurrent 401 responses share a single
+ * refresh token call instead of each firing their own, which would cause the
+ * backend to invalidate tokens mid-flight.
+ */
+let refreshPromise: Promise<void> | null = null;
+
+async function ensureTokenRefreshed(): Promise<void> {
+    if (refreshPromise) {
+        // Another request is already refreshing — wait for it
+        return refreshPromise;
+    }
+
+    const refreshToken = getStoredRefreshToken();
+    if (!refreshToken) {
+        throw new Error("No refresh token available");
+    }
+
+    refreshPromise = refreshTokenService(refreshToken)
+        .then(() => {
+            // success — new tokens saved to localStorage by refreshTokenService
+        })
+        .catch((err) => {
+            logoutService();
+            throw err;
+        })
+        .finally(() => {
+            refreshPromise = null;
+        });
+
+    return refreshPromise;
+}
+
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
     const headers = new Headers(init.headers);
     const token = getStoredToken();
@@ -18,18 +51,14 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
         return response;
     }
 
-    const refreshToken = getStoredRefreshToken();
-    if (!refreshToken) {
-        return response;
-    }
-
+    // Try to refresh the access token (shared across concurrent 401s)
     try {
-        await refreshTokenService(refreshToken);
+        await ensureTokenRefreshed();
     } catch {
-        logoutService();
         return response;
     }
 
+    // Retry the original request with the new token
     const retryHeaders = new Headers(init.headers);
     const newToken = getStoredToken();
 
@@ -43,3 +72,4 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
 
     return fetch(input, { ...init, headers: retryHeaders });
 }
+

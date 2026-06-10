@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useState, type ReactNode } from "react";
 import {
     loginService,
     signUpService,
@@ -38,29 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const isAuthenticated = !!token;
 
-    useEffect(() => {
-        if (!user) {
-            const storedUser = getStoredUser();
-            if (storedUser) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
-                setUser(storedUser);
-            }
-        }
-
-        if (!token) {
-            const storedToken = getStoredToken();
-            if (storedToken) {
-                setToken(storedToken);
-            }
-        }
-
-        if (!refreshToken) {
-            const storedRefreshToken = getStoredRefreshToken();
-            if (storedRefreshToken) {
-                setRefreshToken(storedRefreshToken);
-            }
-        }
-    }, [user, token, refreshToken]);
+    // Note: user, token and refreshToken are lazy-initialized from localStorage
+    // directly in useState above, so no useEffect is needed to hydrate them.
 
     async function login(email: string, password: string) {
         setLoading(true);
