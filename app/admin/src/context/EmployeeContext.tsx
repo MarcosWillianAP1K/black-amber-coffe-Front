@@ -30,6 +30,12 @@ interface EmployeeContextValue {
     employees: Worker[];
     isLoading: boolean;
     error: string | null;
+    /**
+     * Whether the backend supports blocking/unblocking employees.
+     * Currently false — no API endpoint exists for toggling isActive.
+     * Use this to hide/disable the block button in the UI.
+     */
+    canBlockEmployees: boolean;
     refresh: () => Promise<void>;
     deleteEmployee: (publicId: string) => Promise<void>;
     toggleEmployeeStatus: (publicId: string) => Promise<void>;
@@ -150,6 +156,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
                 employees,
                 isLoading,
                 error,
+                canBlockEmployees: false, // No API endpoint for toggling isActive
                 refresh,
                 deleteEmployee,
                 toggleEmployeeStatus,

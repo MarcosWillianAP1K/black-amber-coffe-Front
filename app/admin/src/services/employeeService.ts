@@ -85,21 +85,39 @@ export async function createEmployee(data: {
         return newEmployee;
     }
 
+    const requestBody = {
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        role: data.role,
+        salary: data.salary,
+    };
+
+
     const response = await authFetch(API.AdminWorkers.Register, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            fullName: data.fullName,
-            email: data.email,
-            password: data.password,
-            phone: data.phone,
-            role: data.role,
-            salary: data.salary,
-        }),
+        body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to create employee: ${response.status}`);
+        let message = `Failed to create employee: ${response.status}`;
+        try {
+            const rawBody = await response.text();
+            const errBody = JSON.parse(rawBody) as { message?: string; error?: string };
+            message = errBody.message ?? errBody.error ?? message;
+        } catch {
+            // response body is not JSON — keep the default message
+        }
+
+        if (response.status === 401) {
+            throw new Error("Sem permissão — apenas admins podem cadastrar funcionários.");
+        }
+        if (response.status === 409) {
+            throw new Error("Já existe um funcionário com esse e-mail.");
+        }
+        throw new Error(message);
     }
 
     const payload = (await response.json()) as AdminWorkerResponse;
@@ -178,9 +196,10 @@ export async function toggleEmployeeStatus(publicId: string): Promise<Worker> {
         return updated;
     }
 
-    // NOTE: No API endpoint exists to toggle worker isActive.
-    // Backend's updateWorkerSchema has no isActive field.
-    throw new Error("toggleEmployeeStatus is not available via API — mock only");
+    // ⚠️ Backend does not have a route to activate/deactivate workers.
+    // The PUT /admin/workers/:id body accepts: fullName, email, password, phone, role, salary.
+    // isActive is NOT accepted. When this endpoint is added, implement it here.
+    throw new Error("Bloquear/desbloquear funcionário não está disponível — o backend não possui essa rota.");
 }
 
 /** Delete an employee */
