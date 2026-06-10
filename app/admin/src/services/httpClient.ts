@@ -54,7 +54,11 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
     // Try to refresh the access token (shared across concurrent 401s)
     try {
         await ensureTokenRefreshed();
+        // Notify AuthContext that new tokens are available in localStorage
+        window.dispatchEvent(new CustomEvent("auth:token-refreshed"));
     } catch {
+        // Refresh failed — session is over, notify AuthContext to clear React state
+        window.dispatchEvent(new CustomEvent("auth:session-expired"));
         return response;
     }
 
@@ -72,4 +76,3 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
 
     return fetch(input, { ...init, headers: retryHeaders });
 }
-

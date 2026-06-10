@@ -1,4 +1,4 @@
-import { createContext, useState, type ReactNode } from "react";
+import { createContext, useEffect, useState, type ReactNode } from "react";
 import {
     loginService,
     signUpService,
@@ -40,6 +40,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Note: user, token and refreshToken are lazy-initialized from localStorage
     // directly in useState above, so no useEffect is needed to hydrate them.
+
+    /**
+     * Listen for events dispatched by httpClient:
+     * - auth:session-expired  → refresh token is invalid, force logout
+     * - auth:token-refreshed  → silent refresh succeeded, sync new tokens into state
+     */
+    useEffect(() => {
+        function handleSessionExpired() {
+            setUser(null);
+            setToken(null);
+            setRefreshToken(null);
+        }
+
+        function handleTokenRefreshed() {
+            setToken(getStoredToken());
+            setRefreshToken(getStoredRefreshToken());
+        }
+
+        window.addEventListener("auth:session-expired", handleSessionExpired);
+        window.addEventListener("auth:token-refreshed", handleTokenRefreshed);
+
+        return () => {
+            window.removeEventListener("auth:session-expired", handleSessionExpired);
+            window.removeEventListener("auth:token-refreshed", handleTokenRefreshed);
+        };
+    }, []);
 
     async function login(email: string, password: string) {
         setLoading(true);
