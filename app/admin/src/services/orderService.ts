@@ -25,7 +25,9 @@ export async function fetchOrders(): Promise<Order[]> {
         return [...orders];
     }
 
-    const response = await authFetch(API.AdminOrders.List, {
+    const userRole = localStorage.getItem("userRole");
+
+    const response = await authFetch(userRole === "ADMIN" ? API.AdminOrders.List : API.OrdersWorker.List, {
         method: "GET",
     });
 
