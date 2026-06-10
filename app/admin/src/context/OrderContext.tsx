@@ -46,6 +46,7 @@ interface OrderContextValue {
     refresh: () => Promise<void>;
     handleAction: (orderId: number, action: string) => Promise<void>;
     addOrder: (data: NewOrderData) => Promise<void>;
+    deleteOrder: (orderId: number) => Promise<void>;
 }
 
 // ──────────────────────────────────────────────
@@ -123,7 +124,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 }
 
                 if (action === "delete") {
-                    await orderService.cancelOrder(publicId);
+                    await orderService.deleteOrder(publicId);
                     setOrders((prev) => prev.filter((o) => o.id !== orderId));
                     refresh();
                     return;
@@ -179,6 +180,24 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         [refresh],
     );
 
+    const deleteOrder = useCallback(
+        async (orderId: number) => {
+            const order = orders.find((o) => o.id === orderId);
+            if (!order) return;
+
+            try {
+                await orderService.deleteOrder(order.publicId);
+                setOrders((prev) => prev.filter((o) => o.id !== orderId));
+                refresh();
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Failed to delete order";
+                setError(message);
+                throw err;
+            }
+        },
+        [orders, refresh],
+    );
+
     // ── Render ─────────────────────────────────
 
     return (
@@ -190,6 +209,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
                 refresh,
                 handleAction,
                 addOrder,
+                deleteOrder,
             }}
         >
             {children}

@@ -140,3 +140,23 @@ export async function cancelOrder(publicId: string): Promise<Order> {
     const payload = (await response.json()) as WorkerOrderResponse;
     return payload.data;
 }
+
+
+export async function deleteOrder(publicId: string): Promise<void> {
+    if (USE_MOCK) {
+        orders = orders.filter((o) => o.publicId !== publicId);
+        return;
+    }
+    // const response = await authFetch(API.AdminOrders.DeleteById(publicId), {
+    //     method: "DELETE",
+    // });
+    // if (!response.ok) {
+    //     throw new Error(`Failed to delete order: ${response.status}`);
+    // }
+
+
+    console.log("Delete not implemented for order: ", publicId);
+    throw new Error(`Failed to delete order: ${publicId}`);
+
+   
+}
