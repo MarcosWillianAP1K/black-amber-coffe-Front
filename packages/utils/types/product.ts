@@ -31,12 +31,10 @@ export interface ProductInput {
 
 /** Available product categories (UI only) */
 export const PRODUCT_CATEGORIES = [
-    "Hot Coffee",
-    "Cold Brew",
-    "Pastry",
-    "Tea",
-    "Specialty",
-    "Snacks",
+    "COFFEE",
+    "DRINKS",
+    "FOOD",
+    "OTHER"
 ] as const;
 
 export type ProductCategory = string;

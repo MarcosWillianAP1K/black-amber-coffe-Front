@@ -98,17 +98,14 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         async (data: ProductInput) => {
             try {
                 const { imageFile, ...productData } = data;
-                const created = await menuService.createMenuItem(productData);
+                let created = await menuService.createMenuItem(productData);
 
-                // Upload image in background after creation
+                // Upload image after creation and use the updated product (with real imageUrl)
                 if (imageFile) {
-                    await menuService.uploadProductImage(created.publicId, imageFile);
+                    created = await menuService.uploadProductImage(created.publicId, imageFile);
                 }
 
-                setItems((prev) => {
-                    const next = [...prev, created];
-                    return next;
-                });
+                setItems((prev) => [...prev, created]);
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to create menu item";
                 setError(message);
@@ -126,17 +123,14 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 if (!product) throw new Error(`Product ${id} not found`);
 
                 const { imageFile, ...productData } = data;
-                const updated = await menuService.updateMenuItem(product.publicId, productData);
+                let updated = await menuService.updateMenuItem(product.publicId, productData);
 
-                // Upload image in background after update
+                // Upload image after update and use the updated product (with real imageUrl)
                 if (imageFile) {
-                    await menuService.uploadProductImage(product.publicId, imageFile);
+                    updated = await menuService.uploadProductImage(product.publicId, imageFile);
                 }
 
-                setItems((prev) => {
-                    const next = prev.map((item) => (item.id === id ? updated : item));
-                    return next;
-                });
+                setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Failed to update menu item";
                 setError(message);
@@ -193,6 +187,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 // Hook
 // ──────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useMenuContext(): MenuContextValue {
     const context = useContext(MenuContext);
     if (!context) {

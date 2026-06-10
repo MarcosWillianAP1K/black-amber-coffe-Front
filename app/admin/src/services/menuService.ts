@@ -81,12 +81,14 @@ export async function createMenuItem(data: ProductInput): Promise<Product> {
         return newItem;
     }
 
+
     const response = await authFetch(API.AdminProducts.Create, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             name: data.name,
             description: data.description ?? null,
+            imageUrl: null, // image is uploaded separately via uploadProductImage()
             size: data.size ?? null,
             price: data.price,
             category: data.category,
@@ -134,6 +136,7 @@ export async function updateMenuItem(publicId: string, data: ProductInput): Prom
             price: data.price,
             category: data.category,
             isActive: data.isActive,
+            // imageUrl is intentionally omitted — image is uploaded via uploadProductImage()
         }),
     });
 
